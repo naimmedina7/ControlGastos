@@ -1,0 +1,63 @@
+@model RegistroVm
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Crear cuenta";
+}
+
+<div class="auth">
+    <partial name="_AuthBrand" />
+
+    <section class="auth-form-side">
+        <div class="auth-form">
+            <div class="auth-mobile-logo align-items-center gap-2">
+                <partial name="_Logo" />
+                <span class="brand-name">Mis<span class="dot">·</span><span class="light">Gastos</span></span>
+            </div>
+
+            <h2>Crear cuenta</h2>
+            <p class="lead-x">Tus gastos quedan en tu cuenta y nadie más los puede ver.</p>
+
+            <div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+
+            <form method="post" asp-action="Registro" novalidate data-validate>
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label">Nombre</label>
+                    <div class="input-icon">
+                        <i class="bi bi-person" aria-hidden="true"></i>
+                        <input asp-for="Nombre" class="form-control" placeholder="Cómo quieres que te llame" autocomplete="name" required autofocus />
+                    </div>
+                    <span asp-validation-for="Nombre" class="field-error"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Correo electrónico</label>
+                    <div class="input-icon">
+                        <i class="bi bi-envelope" aria-hidden="true"></i>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="tu@correo.com" autocomplete="email" required />
+                    </div>
+                    <span asp-validation-for="Email" class="field-error"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Contraseña</label>
+                    <div class="input-icon">
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" required minlength="8" style="padding-right:44px" />
+                        <button type="button" class="toggle-pass" aria-label="Mostrar contraseña" data-toggle-pass><i class="bi bi-eye"></i></button>
+                    </div>
+                    <div class="form-hint">Al menos 8 caracteres, con una letra minúscula y un número.</div>
+                    <span asp-validation-for="Password" class="field-error"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="ConfirmarPassword" class="form-label">Repetir contraseña</label>
+                    <div class="input-icon">
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <input asp-for="ConfirmarPassword" class="form-control" autocomplete="new-password" required />
+                    </div>
+                    <span asp-validation-for="ConfirmarPassword" class="field-error"></span>
+                </div>
+                <button class="btn btn-primary btn-lg w-100" type="submit">Crear cuenta <i class="bi bi-arrow-right"></i></button>
+            </form>
+
+            <p class="auth-switch">¿Ya tienes cuenta? <a asp-action="Login">Iniciar sesión</a></p>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,171 @@
+@model ImportarVm
+@{
+    ViewData["Title"] = "Importar estado de cuenta";
+    ViewData["Section"] = "Herramientas";
+    var a = Model.Analisis;
+    string ejemplo = "**** 1012\tMERPAGO*MERCADOLIBRE\tPlan Pagos\t05/10/26\tPesos\t407,90\t3/3\n**** 1012\tNETFLIX.COM\tComun\t21/10/26\tDólares\t5,17";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Herramientas</span>
+        <h1>Importar estado de cuenta</h1>
+        <p>Copia los movimientos del estado de cuenta (web del banco o PDF) y pégalos acá. Antes de guardar vas a poder revisar cada línea.</p>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+
+<form method="post" asp-action="Analizar" data-validate novalidate class="card-x mb-4" id="form-importar">
+    <div class="form-section">
+        <h2 class="form-section-title">1 · Pega el texto</h2>
+        <p class="form-section-sub">Una línea por movimiento, con fecha, moneda y monto. Las cuotas tipo "3/10" se reconocen solas y los "RECIBO DE PAGO" se omiten.</p>
+        <textarea asp-for="Texto" class="form-control mono" rows="@(a == null ? 10 : 4)" required maxlength="@EstadoDeCuenta.MaxCaracteres" spellcheck="false" placeholder="@ejemplo"></textarea>
+        <span asp-validation-for="Texto" class="field-error"></span>
+    </div>
+    <div class="form-section">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label asp-for="TarjetaId" class="form-label">Tarjeta del estado de cuenta</label>
+                <select asp-for="TarjetaId" class="form-select">
+                    @foreach (var t in Model.Tarjetas)
+                    {
+                        <option value="@t.Id">@t.Nombre (@Fmt.Tipo(t.Tipo)@(t.CierreEfectivo is int c ? $", cierra el {c}" : ""))</option>
+                    }
+                    <option value="">Efectivo / transferencia</option>
+                </select>
+                <span asp-validation-for="TarjetaId" class="field-error"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="MesEstado" class="form-label">Mes del estado de cuenta</label>
+                <input asp-for="MesEstado" type="month" class="form-control" />
+                <div class="form-hint">Vacío = se deduce de las fechas.</div>
+            </div>
+            <div class="col-md-3 d-grid">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i>@(a == null ? "Analizar" : "Volver a analizar")</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (a != null && a.Items.Count > 0)
+{
+    var gastos = a.Items.Where(i => i.Linea.Tipo == TipoLinea.Gasto).ToList();
+    var otros = a.Items.Where(i => i.Linea.Tipo != TipoLinea.Gasto).ToList();
+
+    <section class="kpi-grid" aria-label="Resumen del análisis">
+        <article class="card-x kpi featured">
+            <div class="kpi-top"><span class="kpi-label">Gastos nuevos</span><span class="kpi-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></span></div>
+            <div class="kpi-value">@a.Nuevos</div>
+            <div class="kpi-meta">estado de cuenta de @Fmt.MesAnio(a.MesEstado)</div>
+        </article>
+        <article class="card-x kpi">
+            <div class="kpi-top"><span class="kpi-label">Ya cargados</span><span class="kpi-icon accent"><i class="bi bi-files" aria-hidden="true"></i></span></div>
+            <div class="kpi-value">@a.Duplicados</div>
+            <div class="kpi-meta">quedan desmarcados</div>
+        </article>
+        <article class="card-x kpi">
+            <div class="kpi-top"><span class="kpi-label">Pagos de la tarjeta</span><span class="kpi-icon accent"><i class="bi bi-receipt" aria-hidden="true"></i></span></div>
+            <div class="kpi-value">@a.Pagos</div>
+            <div class="kpi-meta">se omiten</div>
+        </article>
+        <article class="card-x kpi">
+            <div class="kpi-top"><span class="kpi-label">No reconocidas</span><span class="kpi-icon accent"><i class="bi bi-question-circle" aria-hidden="true"></i></span></div>
+            <div class="kpi-value">@a.NoReconocidas</div>
+            <div class="kpi-meta">revisa abajo</div>
+        </article>
+    </section>
+
+    @if (gastos.Count > 0)
+    {
+        <form method="post" asp-action="Confirmar" class="card-x mb-4" id="form-confirmar">
+            <input type="hidden" name="Texto" value="@Model.Texto" />
+            <input type="hidden" name="TarjetaId" value="@Model.TarjetaId" />
+            <input type="hidden" name="MesEstado" value="@Model.MesEstado" />
+
+            <div class="card-head">
+                <div>
+                    <h2>2 · Revisa y confirma</h2>
+                    <div class="sub">Puedes cambiar la descripción y la categoría. La próxima vez que importes ese comercio, se va a proponer lo mismo.</div>
+                </div>
+            </div>
+            <div class="table-wrap mt-3">
+                <table class="table-x table-import">
+                    <thead>
+                        <tr>
+                            <th scope="col"><input type="checkbox" class="form-check-input" data-check-all checked aria-label="Marcar todas" /></th>
+                            <th scope="col">Comercio</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col" class="hide-sm">Fecha</th>
+                            <th scope="col" class="hide-sm">Cuota</th>
+                            <th scope="col" class="amount">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < gastos.Count; i++)
+                        {
+                            var it = gastos[i];
+                            var l = it.Linea;
+                            <tr class="@(it.Duplicado ? "row-muted" : "")" data-import-row data-monto="@l.Monto.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-moneda="@l.Moneda">
+                                <td>
+                                    <input type="hidden" name="Items[@i].Numero" value="@l.Numero" />
+                                    <input type="checkbox" class="form-check-input" name="Items[@i].Incluir" value="true" checked="@it.Incluir" aria-label="Importar @l.Comercio" />
+                                </td>
+                                <td>
+                                    <div class="cell-title mono-sm">@l.Comercio</div>
+                                    @if (it.Duplicado) { <span class="chip chip-warn"><i class="bi bi-files"></i>Ya cargado</span> }
+                                </td>
+                                <td><input type="text" class="form-control form-control-sm" name="Items[@i].Descripcion" value="@it.Descripcion" maxlength="120" aria-label="Descripción" /></td>
+                                <td>
+                                    <select class="form-select form-select-sm" name="Items[@i].CategoriaId" aria-label="Categoría">
+                                        <option value="">Sin categoría</option>
+                                        @foreach (var c in Model.Categorias)
+                                        {
+                                            <option value="@c.Id" selected="@(c.Id == it.CategoriaId)">@c.Nombre</option>
+                                        }
+                                    </select>
+                                    @if (it.OrigenCategoria == "historial") { <div class="cell-sub"><i class="bi bi-clock-history"></i> como la última vez</div> }
+                                </td>
+                                <td class="hide-sm cell-nowrap text-2">@Fmt.FechaCorta(l.Fecha)</td>
+                                <td class="hide-sm cell-nowrap">@if (l.EnCuotas) { <span class="cuota-pill">@l.CuotaActual/@l.CantidadCuotas</span> } else { <span class="text-muted-x">Contado</span> }</td>
+                                <td class="amount">@Fmt.Money(l.Monto, l.Moneda)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td></td>
+                            <td colspan="4"><span data-import-count></span></td>
+                            <td class="hide-sm"></td>
+                            <td class="amount num"><div data-import-total="UYU"></div><div data-import-total="USD"></div></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-ghost" asp-action="Index">Cancelar</a>
+                <button class="btn btn-primary" type="submit"><i class="bi bi-check2-all"></i>Importar seleccionados</button>
+            </div>
+        </form>
+    }
+
+    @if (otros.Count > 0)
+    {
+        <section class="card-x">
+            <div class="card-head"><div><h2>Líneas que no se importan</h2><div class="sub">Pagos de la tarjeta y texto que no tiene el formato de un movimiento.</div></div></div>
+            <ul class="mini-list">
+                @foreach (var it in otros)
+                {
+                    <li>
+                        <span class="cat-icon sm" aria-hidden="true"><i class="bi @(it.Linea.Tipo == TipoLinea.PagoTarjeta ? "bi-receipt" : "bi-question-lg")"></i></span>
+                        <div class="grow">
+                            <div class="cell-title mono-sm">@it.Linea.Original</div>
+                            <div class="cell-sub">Línea @it.Linea.Numero · @it.Linea.Motivo</div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+}

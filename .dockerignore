@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/App_Data/
+**/*.db
+**/appsettings.Development.json
+tests/
+docs/
+.git/
+.vs/
+.vscode/

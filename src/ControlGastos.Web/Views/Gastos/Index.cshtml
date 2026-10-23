@@ -1,0 +1,194 @@
+@model GastosMesVm
+@{
+    ViewData["Title"] = "Gastos del mes";
+    ViewData["Section"] = "General";
+    var r = Model.Resumen;
+    int nFijos = r.Lineas.Count(l => l.Gasto.EsFijo);
+    int nCuotas = r.Lineas.Count(l => l.Gasto.EnCuotas);
+    int nContado = r.Lineas.Count - nCuotas - nFijos;
+    int nUsd = r.Lineas.Count(l => l.Gasto.Moneda == Moneda.USD);
+    var tarjetas = r.Lineas.Select(l => l.Gasto.Tarjeta).DistinctBy(t => t?.Id).OrderBy(t => t?.Nombre ?? "~").ToList();
+    var categorias = r.Lineas.Select(l => l.Gasto.Categoria).DistinctBy(c => c?.Id).OrderBy(c => c?.Nombre ?? "~").ToList();
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    string Kind(Gasto g) => g.EsFijo ? "fijo" : g.EnCuotas ? "cuotas" : "contado";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">@Fmt.MesAnioCap(Model.Mes)@(Model.EsMesActual ? " · mes en curso" : "")</span>
+        <h1>Gastos del mes</h1>
+        <p>Todo lo que pagas en @Fmt.MesAnio(Model.Mes): compras al contado, gastos fijos y la cuota del mes de cada compra en cuotas.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-light" asp-controller="Importar" asp-action="Index" title="Importar estado de cuenta"><i class="bi bi-clipboard-plus"></i><span class="hide-sm">Importar</span></a>
+        <a class="btn btn-light" asp-controller="Reportes" asp-action="Exportar" asp-route-desde="@Fmt.MesParam(Model.Mes)" asp-route-hasta="@Fmt.MesParam(Model.Mes)" title="Descargar CSV del mes"><i class="bi bi-download"></i><span class="hide-sm">CSV</span></a>
+        <partial name="_MesNav" model="Model.Mes" />
+    </div>
+</div>
+
+<section class="kpi-grid kpi-3" aria-label="Totales del mes">
+    <article class="card-x kpi featured">
+        <div class="kpi-top"><span class="kpi-label">En pesos</span><span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.UYU))</div>
+        <div class="kpi-meta">@(r.Lineas.Count - nUsd) gasto(s)</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">En dólares</span><span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.USD), Moneda.USD)</div>
+        <div class="kpi-meta">@nUsd gasto(s)</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Comprometido después de este mes</span><span class="kpi-icon accent"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Pendiente(Moneda.UYU))</div>
+        <div class="kpi-meta">@if (r.Pendiente(Moneda.USD) > 0) { <span>+ @Fmt.Money(r.Pendiente(Moneda.USD), Moneda.USD) ·</span> } <a asp-action="Cuotas">Ver cuotas pendientes</a></div>
+    </article>
+</section>
+
+@if (Model.Previstos.Count > 0)
+{
+    <section class="card-x mb-4" aria-labelledby="prev-title">
+        <div class="card-head">
+            <div>
+                <h2 id="prev-title"><i class="bi bi-arrow-repeat text-muted-x"></i> Gastos fijos previstos</h2>
+                <div class="sub">Se cargan solos cuando llegue @Fmt.MesAnio(Model.Mes). Todavía no suman en los totales de arriba.</div>
+            </div>
+            <a class="link-arrow" asp-controller="Recurrentes" asp-action="Index">Gastos fijos <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <ul class="mini-list">
+            @foreach (var p in Model.Previstos)
+            {
+                <li>
+                    @Fmt.IconoCategoria(p.Categoria, "sm")
+                    <div class="grow">
+                        <div class="cell-title">@p.Descripcion</div>
+                        <div class="cell-sub">Día @p.DiaDelMes · @p.MedioDePago</div>
+                    </div>
+                    <span class="money text-2">@Fmt.Money(p.Monto, p.Moneda)</span>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+<section class="card-x">
+    <div class="toolbar" data-table-tools="tabla-gastos">
+        <div class="segmented" role="group" aria-label="Filtrar por tipo">
+            <button type="button" class="active" aria-pressed="true" data-kind-filter="all">Todos <span class="count">@r.Lineas.Count</span></button>
+            <button type="button" aria-pressed="false" data-kind-filter="contado">Contado <span class="count">@nContado</span></button>
+            <button type="button" aria-pressed="false" data-kind-filter="cuotas">Cuotas <span class="count">@nCuotas</span></button>
+            <button type="button" aria-pressed="false" data-kind-filter="fijo">Fijos <span class="count">@nFijos</span></button>
+        </div>
+        <div class="toolbar-filters">
+            <select class="form-select form-select-sm" data-filter="tarjeta" aria-label="Filtrar por medio de pago">
+                <option value="">Todos los medios</option>
+                @foreach (var t in tarjetas)
+                {
+                    <option value="@(t?.Id.ToString() ?? "0")">@(t?.Nombre ?? "Efectivo / transferencia")</option>
+                }
+            </select>
+            <select class="form-select form-select-sm" data-filter="categoria" aria-label="Filtrar por categoría">
+                <option value="">Todas las categorías</option>
+                @foreach (var c in categorias)
+                {
+                    <option value="@(c?.Id.ToString() ?? "0")">@(c?.Nombre ?? "Sin categoría")</option>
+                }
+            </select>
+            <div class="search">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" class="form-control" placeholder="Buscar…" aria-label="Buscar gastos">
+            </div>
+        </div>
+    </div>
+
+    @if (r.Lineas.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+            <h3>No hay gastos en @Fmt.MesAnio(Model.Mes)</h3>
+            <p>Cuando cargues un gasto (o una compra en cuotas que tenga una cuota este mes), aparece acá.</p>
+            <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table-x" id="tabla-gastos">
+                <thead>
+                    <tr>
+                        <th scope="col">Gasto</th>
+                        <th scope="col" class="hide-sm">Medio de pago</th>
+                        <th scope="col" class="hide-sm">Fecha</th>
+                        <th scope="col" class="hide-sm">Tipo</th>
+                        <th scope="col" class="amount">Monto del mes</th>
+                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in r.Lineas)
+                    {
+                        var g = l.Gasto;
+                        <tr data-kind="@Kind(g)" data-tarjeta="@(g.TarjetaId ?? 0)" data-categoria="@(g.CategoriaId ?? 0)"
+                            data-monto="@l.Monto.ToString(inv)" data-moneda="@g.Moneda"
+                            data-search="@Fmt.SearchKey(g.Descripcion, g.Comercio, g.Categoria?.Nombre, g.MedioDePago)">
+                            <td>
+                                <div class="cell-main">
+                                    @Fmt.IconoCategoria(g.Categoria)
+                                    <div>
+                                        <div class="cell-title">@g.Descripcion @Fmt.MonedaBadge(g.Moneda)</div>
+                                        <div class="cell-sub">@(g.Categoria?.Nombre ?? "Sin categoría")@if (!string.IsNullOrEmpty(g.Comercio)) { <text> · @g.Comercio</text> }</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="hide-sm">
+                                <div class="cell-main">@Fmt.Punto(g.Tarjeta?.Color ?? "#64748b")<span class="cell-nowrap">@g.MedioDePago</span></div>
+                            </td>
+                            <td class="hide-sm cell-nowrap text-2">@Fmt.Fecha(g.Fecha)</td>
+                            <td class="hide-sm cell-nowrap">
+                                @if (g.EnCuotas)
+                                {
+                                    <div><span class="cuota-pill">@l.Numero/@g.CantidadCuotas</span> @if (l.EsUltima) { <span class="chip chip-ok">última</span> }</div>
+                                    <div class="cell-sub">@Fmt.MesCortoAnio(g.PrimerPeriodo) <i class="bi bi-arrow-right" style="font-size:.7rem"></i> @Fmt.MesCortoAnio(g.UltimoPeriodo) <span class="progress-mini" aria-hidden="true"><span style="width:@(l.Numero * 100 / g.CantidadCuotas)%"></span></span></div>
+                                }
+                                else if (g.EsFijo)
+                                {
+                                    <span class="chip chip-recurrente"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Fijo</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted-x">Contado</span>
+                                }
+                            </td>
+                            <td class="amount">
+                                @Fmt.Money(l.Monto, g.Moneda)
+                                @if (g.EnCuotas) { <div class="cell-sub">de @Fmt.Money(g.MontoTotal, g.Moneda)</div> }
+                            </td>
+                            <td class="row-actions">
+                                <a class="btn-icon" asp-action="Editar" asp-route-id="@g.Id" title="Editar" aria-label="Editar @g.Descripcion"><i class="bi bi-pencil"></i></a>
+                                <form method="post" asp-action="Eliminar" asp-route-id="@g.Id" asp-route-mes="@Fmt.MesParam(Model.Mes)" class="d-inline"
+                                      data-confirm="@(g.EnCuotas ? $"¿Eliminar \"{g.Descripcion}\" y sus {g.CantidadCuotas} cuotas?" : g.EsFijo ? $"¿Eliminar \"{g.Descripcion}\" de este mes? El gasto fijo sigue para los próximos meses." : $"¿Eliminar \"{g.Descripcion}\"?")">
+                                    <button type="submit" class="btn-icon danger" title="Eliminar" aria-label="Eliminar @g.Descripcion"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    <tr class="no-results" hidden>
+                        <td colspan="6"><div class="empty py-4"><div class="empty-icon"><i class="bi bi-search"></i></div><h3>Sin resultados</h3><p class="mb-0">Prueba con otra búsqueda o cambia los filtros.</p></div></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><span data-total-label>Total del mes</span></td>
+                        <td class="hide-sm"></td>
+                        <td class="hide-sm"></td>
+                        <td class="hide-sm"></td>
+                        <td class="amount num">
+                            <div data-total="UYU">@Fmt.Money(r.Total(Moneda.UYU))</div>
+                            <div data-total="USD" @(r.Total(Moneda.USD) > 0 ? "" : "hidden")>@Fmt.Money(r.Total(Moneda.USD), Moneda.USD)</div>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+</section>

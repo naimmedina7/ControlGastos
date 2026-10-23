@@ -1,0 +1,56 @@
+@model CategoriaFormVm
+@{
+    bool editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar categoría" : "Nueva categoría";
+    ViewData["Section"] = "Configuración";
+    string[] colores = { "#16a34a", "#ea580c", "#0284c7", "#a16207", "#dc2626", "#7c3aed", "#db2777", "#0891b2", "#4f46e5", "#c026d3", "#e11d48", "#475569", "#0f766e", "#64748b" };
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow"><a asp-action="Index" class="text-reset"><i class="bi bi-arrow-left"></i> Categorías</a></span>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+
+<form method="post" asp-action="@(editando ? "Editar" : "Nueva")" asp-route-id="@Model.Id" data-validate novalidate class="form-narrow">
+    <div class="card-x">
+        <div class="form-section">
+            <label asp-for="Nombre" class="form-label">Nombre</label>
+            <input asp-for="Nombre" class="form-control" maxlength="60" placeholder="Ej.: Mascotas" required autofocus />
+            <span asp-validation-for="Nombre" class="field-error"></span>
+        </div>
+        <div class="form-section">
+            <h2 class="form-section-title">Ícono</h2>
+            <div class="icon-picker" role="radiogroup" aria-label="Ícono">
+                @foreach (var i in CategoriaFormVm.Iconos)
+                {
+                    <label class="icon-option" title="@i">
+                        <input type="radio" name="Icono" value="@i" checked="@(Model.Icono == i)" />
+                        <span><i class="bi @i" aria-hidden="true"></i></span><span class="visually-hidden">@i</span>
+                    </label>
+                }
+            </div>
+            <span asp-validation-for="Icono" class="field-error"></span>
+        </div>
+        <div class="form-section">
+            <h2 class="form-section-title">Color</h2>
+            <div class="swatches" role="radiogroup" aria-label="Color">
+                @foreach (var c in colores)
+                {
+                    <label class="swatch" style="--sw:@c" title="@c">
+                        <input type="radio" name="Color" value="@c" checked="@(string.Equals(Model.Color, c, StringComparison.OrdinalIgnoreCase))" />
+                        <span aria-hidden="true"></span><span class="visually-hidden">@c</span>
+                    </label>
+                }
+            </div>
+            <span asp-validation-for="Color" class="field-error"></span>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-ghost" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i>@(editando ? "Guardar cambios" : "Crear categoría")</button>
+        </div>
+    </div>
+</form>

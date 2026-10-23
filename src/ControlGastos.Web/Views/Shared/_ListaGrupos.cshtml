@@ -1,0 +1,34 @@
+@model (List<TotalPorGrupo> Grupos, string Vacio)
+@{
+    var porMoneda = Model.Grupos.GroupBy(g => g.Moneda).OrderBy(g => g.Key).ToList();
+}
+@if (Model.Grupos.Count == 0)
+{
+    <div class="empty py-4"><div class="empty-icon"><i class="bi bi-pie-chart"></i></div><p>@Model.Vacio</p></div>
+}
+else
+{
+    foreach (var moneda in porMoneda)
+    {
+        decimal total = moneda.Sum(g => g.Total);
+        decimal max = moneda.Max(g => g.Total);
+        if (porMoneda.Count > 1)
+        {
+            <div class="group-label">@(moneda.Key == Moneda.USD ? "En dólares" : "En pesos")</div>
+        }
+        <ul class="cat-list">
+            @foreach (var g in moneda)
+            {
+                <li class="cat-row" title="@g.Cantidad gasto(s) · @Fmt.Pct(g.Total, total)% del total">
+                    @Fmt.IconoGrupo(g.Icono, g.Color)
+                    <div>
+                        @{ decimal pct = total > 0 ? g.Total / total * 100 : 0; }
+                        <div class="cat-name"><span>@g.Nombre</span><small>@(pct > 0 && pct < 1 ? "<1" : decimal.Round(pct).ToString())%</small></div>
+                        <div class="cat-track"><div class="cat-fill" style="width:@Fmt.Pct(g.Total, max)%;background:@Fmt.ColorSeguro(g.Color)"></div></div>
+                    </div>
+                    <span class="cat-amount">@Fmt.Money(g.Total, g.Moneda)</span>
+                </li>
+            }
+        </ul>
+    }
+}

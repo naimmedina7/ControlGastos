@@ -1,0 +1,59 @@
+@model List<CategoriaFilaVm>
+@{
+    ViewData["Title"] = "Categorías";
+    ViewData["Section"] = "Configuración";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Organización</span>
+        <h1>Categorías</h1>
+        <p>Agrupan tus gastos en el inicio y, más adelante, en los gráficos.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Nueva"><i class="bi bi-plus-lg"></i>Nueva categoría</a>
+    </div>
+</div>
+
+<section class="card-x">
+    @if (Model.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty-icon"><i class="bi bi-tags"></i></div>
+            <h3>No tienes categorías</h3>
+            <p>Crea una para empezar a agrupar tus gastos.</p>
+            <a class="btn btn-primary" asp-action="Nueva"><i class="bi bi-plus-lg"></i>Nueva categoría</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table-x">
+                <thead>
+                    <tr>
+                        <th scope="col">Categoría</th>
+                        <th scope="col" class="amount">Gastos</th>
+                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model)
+                    {
+                        var c = f.Categoria;
+                        <tr>
+                            <td><div class="cell-main">@Fmt.IconoCategoria(c)<span class="cell-title">@c.Nombre</span></div></td>
+                            <td class="amount">@f.CantidadGastos</td>
+                            <td class="row-actions">
+                                <a class="btn-icon" asp-action="Editar" asp-route-id="@c.Id" title="Editar" aria-label="Editar @c.Nombre"><i class="bi bi-pencil"></i></a>
+                                <form method="post" asp-action="Eliminar" asp-route-id="@c.Id" class="d-inline"
+                                      data-confirm="@(f.CantidadGastos > 0 ? $"¿Eliminar \"{c.Nombre}\"? Sus {f.CantidadGastos} gasto(s) quedarán sin categoría." : $"¿Eliminar \"{c.Nombre}\"?")">
+                                    <button type="submit" class="btn-icon danger" title="Eliminar" aria-label="Eliminar @c.Nombre"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

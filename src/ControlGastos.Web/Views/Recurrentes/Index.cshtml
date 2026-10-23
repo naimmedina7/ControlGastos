@@ -1,0 +1,107 @@
+@model RecurrentesVm
+@{
+    ViewData["Title"] = "Gastos fijos";
+    ViewData["Section"] = "Gastos";
+    var mes = Model.MesActual;
+    string Estado(GastoRecurrente r) =>
+        !r.Activo ? "pausa" : r.Hasta < mes ? "terminado" : r.Desde > mes ? "futuro" : "activo";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Recurrentes</span>
+        <h1>Gastos fijos</h1>
+        <p>Lo que pagas todos los meses: alquiler, facultad, préstamos, suscripciones. Se carga solo en cada mes, y después puedes ajustar el monto de un mes puntual.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto fijo</a>
+    </div>
+</div>
+
+<section class="kpi-grid kpi-3" aria-label="Totales de gastos fijos">
+    <article class="card-x kpi featured">
+        <div class="kpi-top"><span class="kpi-label">Fijos por mes en pesos</span><span class="kpi-icon"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(Model.TotalMensual(Moneda.UYU))</div>
+        <div class="kpi-meta">activos en @Fmt.MesAnio(mes)</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Fijos por mes en dólares</span><span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(Model.TotalMensual(Moneda.USD), Moneda.USD)</div>
+        <div class="kpi-meta">suscripciones y servicios en USD</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Gastos fijos</span><span class="kpi-icon accent"><i class="bi bi-list-check" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Model.Activos.Count()</div>
+        <div class="kpi-meta">activos · @Model.Lista.Count(r => !r.Activo) en pausa</div>
+    </article>
+</section>
+
+<section class="card-x">
+    @if (Model.Lista.Count == 0)
+    {
+        <div class="empty">
+            <div class="empty-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <h3>Todavía no tienes gastos fijos</h3>
+            <p>Agrega lo que pagas todos los meses y deja de cargarlo a mano.</p>
+            <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto fijo</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table-x">
+                <thead>
+                    <tr>
+                        <th scope="col">Gasto fijo</th>
+                        <th scope="col" class="hide-sm">Medio de pago</th>
+                        <th scope="col" class="hide-sm">Período</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="amount">Monto</th>
+                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Lista)
+                    {
+                        string estado = Estado(r);
+                        <tr class="@(estado is "pausa" or "terminado" ? "row-muted" : "")">
+                            <td>
+                                <div class="cell-main">
+                                    @Fmt.IconoCategoria(r.Categoria)
+                                    <div>
+                                        <div class="cell-title">@r.Descripcion @Fmt.MonedaBadge(r.Moneda)</div>
+                                        <div class="cell-sub">Día @r.DiaDelMes de cada mes · @(r.Categoria?.Nombre ?? "Sin categoría")</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="hide-sm"><div class="cell-main">@Fmt.Punto(r.Tarjeta?.Color ?? "#64748b")<span class="cell-nowrap">@r.MedioDePago</span></div></td>
+                            <td class="hide-sm cell-nowrap text-2">
+                                @Fmt.MesCortoAnio(r.Desde) <i class="bi bi-arrow-right" style="font-size:.7rem"></i> @(r.Hasta is DateOnly h ? Fmt.MesCortoAnio(h) : "sin fin")
+                            </td>
+                            <td class="cell-nowrap">
+                                @switch (estado)
+                                {
+                                    case "activo": <span class="chip chip-ok"><i class="bi bi-check2"></i>Activo</span> break;
+                                    case "futuro": <span class="chip chip-unico">Empieza en @Fmt.MesCortoAnio(r.Desde)</span> break;
+                                    case "terminado": <span class="chip chip-unico">Terminado</span> break;
+                                    default: <span class="chip chip-warn"><i class="bi bi-pause"></i>En pausa</span> break;
+                                }
+                            </td>
+                            <td class="amount">@Fmt.Money(r.Monto, r.Moneda)</td>
+                            <td class="row-actions">
+                                <a class="btn-icon" asp-action="Editar" asp-route-id="@r.Id" title="Editar" aria-label="Editar @r.Descripcion"><i class="bi bi-pencil"></i></a>
+                                <form method="post" asp-action="CambiarEstado" asp-route-id="@r.Id" class="d-inline">
+                                    <button type="submit" class="btn-icon" title="@(r.Activo ? "Pausar" : "Reanudar")" aria-label="@(r.Activo ? "Pausar" : "Reanudar") @r.Descripcion"><i class="bi @(r.Activo ? "bi-pause-circle" : "bi-play-circle")"></i></button>
+                                </form>
+                                <form method="post" asp-action="Eliminar" asp-route-id="@r.Id" class="d-inline"
+                                      data-confirm="¿Eliminar el gasto fijo &quot;@r.Descripcion&quot;? Los gastos que ya cargó se conservan.">
+                                    <button type="submit" class="btn-icon danger" title="Eliminar" aria-label="Eliminar @r.Descripcion"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

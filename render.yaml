@@ -1,0 +1,14 @@
+# Blueprint de Render: crea el servicio web desde el Dockerfile.
+# La base (Neon u otra Postgres) se configura con la variable ConnectionStrings__Default o DATABASE_URL.
+services:
+  - type: web
+    name: mis-gastos
+    runtime: docker
+    plan: free
+    healthCheckPath: /cuenta/login
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+      # Dejarlo en "true" hasta crear tu cuenta; después pasarlo a "false" para cerrar el registro.
+      - key: App__RegistroHabilitado
+        value: "true"

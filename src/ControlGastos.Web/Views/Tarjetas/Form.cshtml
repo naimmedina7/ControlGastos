@@ -1,0 +1,63 @@
+@model TarjetaFormVm
+@{
+    bool editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar tarjeta" : "Nueva tarjeta";
+    ViewData["Section"] = "Configuración";
+    string[] colores = { "#059669", "#1d4ed8", "#ea580c", "#dc2626", "#7c3aed", "#db2777", "#0891b2", "#a16207", "#0f172a", "#64748b" };
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow"><a asp-action="Index" class="text-reset"><i class="bi bi-arrow-left"></i> Tarjetas</a></span>
+        <h1>@ViewData["Title"]</h1>
+        <p>Solo un nombre para identificarla. No ingreses números de tarjeta.</p>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+
+<form method="post" asp-action="@(editando ? "Editar" : "Nueva")" asp-route-id="@Model.Id" data-validate novalidate class="form-narrow" id="form-tarjeta">
+    <div class="card-x">
+        <div class="form-section">
+            <label asp-for="Nombre" class="form-label">Nombre</label>
+            <input asp-for="Nombre" class="form-control" maxlength="60" placeholder="Ej.: Itaú débito" required autofocus />
+            <span asp-validation-for="Nombre" class="field-error"></span>
+        </div>
+        <div class="form-section">
+            <h2 class="form-section-title">Tipo</h2>
+            <div class="method-options two" role="radiogroup" aria-label="Tipo de tarjeta">
+                <div class="method-option">
+                    <input type="radio" asp-for="Tipo" id="tipo-credito" value="Credito" />
+                    <label for="tipo-credito"><i class="bi bi-credit-card" aria-hidden="true"></i><strong>Crédito</strong><span>Permite cuotas</span></label>
+                </div>
+                <div class="method-option">
+                    <input type="radio" asp-for="Tipo" id="tipo-debito" value="Debito" />
+                    <label for="tipo-debito"><i class="bi bi-credit-card-2-front" aria-hidden="true"></i><strong>Débito</strong><span>Sale de tu cuenta</span></label>
+                </div>
+            </div>
+            <div class="mt-3" id="bloque-cierre" @(Model.Tipo == TipoTarjeta.Credito ? "" : "hidden")>
+                <label asp-for="DiaCierre" class="form-label">Día de cierre <span class="text-muted-x">(opcional)</span></label>
+                <input asp-for="DiaCierre" class="form-control" type="number" min="1" max="31" step="1" inputmode="numeric" placeholder="Ej.: 25" style="max-width:160px" />
+                <div class="form-hint">Las compras posteriores a ese día pasan al estado de cuenta del mes siguiente. Vacío = cada compra cuenta en su mes.</div>
+                <span asp-validation-for="DiaCierre" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-section">
+            <h2 class="form-section-title">Color</h2>
+            <div class="swatches" role="radiogroup" aria-label="Color">
+                @foreach (var c in colores)
+                {
+                    <label class="swatch" style="--sw:@c" title="@c">
+                        <input type="radio" name="Color" value="@c" checked="@(string.Equals(Model.Color, c, StringComparison.OrdinalIgnoreCase))" />
+                        <span aria-hidden="true"></span><span class="visually-hidden">@c</span>
+                    </label>
+                }
+            </div>
+            <span asp-validation-for="Color" class="field-error"></span>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-ghost" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i>@(editando ? "Guardar cambios" : "Crear tarjeta")</button>
+        </div>
+    </div>
+</form>

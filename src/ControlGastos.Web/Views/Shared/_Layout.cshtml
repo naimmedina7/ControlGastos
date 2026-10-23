@@ -1,0 +1,123 @@
+@inject Microsoft.AspNetCore.Identity.UserManager<AppUser> Users
+@inject Reloj Reloj
+@{
+    var actual = await Users.GetUserAsync(User);
+    string controlador = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string accion = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Activo(string c, string? a = null) =>
+        controlador.Equals(c, StringComparison.OrdinalIgnoreCase) && (a == null || accion.Equals(a, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
+    string seccion = ViewData["Section"] as string ?? "General";
+    string titulo = ViewData["Title"] as string ?? "Inicio";
+    string nombre = actual?.Nombre ?? "";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <partial name="_Head" />
+</head>
+<body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <div class="app">
+        <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+            <a class="sidebar-brand" asp-controller="Panel" asp-action="Index">
+                <partial name="_Logo" />
+                <span class="brand-name">Mis<span class="dot">·</span><span class="light">Gastos</span></span>
+            </a>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">General</div>
+                <a class="side-link @Activo("Panel")" asp-controller="Panel" asp-action="Index"><i class="bi bi-grid-1x2" aria-hidden="true"></i>Inicio</a>
+                <a class="side-link @Activo("Gastos", "Index")" asp-controller="Gastos" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i>Gastos del mes</a>
+                <a class="side-link @Activo("Gastos", "Nuevo")" asp-controller="Gastos" asp-action="Nuevo"><i class="bi bi-plus-circle" aria-hidden="true"></i>Nuevo gasto</a>
+                <a class="side-link @Activo("Gastos", "Cuotas")" asp-controller="Gastos" asp-action="Cuotas"><i class="bi bi-calendar2-range" aria-hidden="true"></i>Cuotas pendientes</a>
+                <a class="side-link @Activo("Recurrentes")" asp-controller="Recurrentes" asp-action="Index"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Gastos fijos</a>
+
+                <div class="nav-section">Análisis</div>
+                <a class="side-link @Activo("Reportes")" asp-controller="Reportes" asp-action="Index"><i class="bi bi-bar-chart-line" aria-hidden="true"></i>Reportes</a>
+                <a class="side-link @Activo("Presupuestos")" asp-controller="Presupuestos" asp-action="Index"><i class="bi bi-piggy-bank" aria-hidden="true"></i>Presupuestos</a>
+
+                <div class="nav-section">Herramientas</div>
+                <a class="side-link @Activo("Importar")" asp-controller="Importar" asp-action="Index"><i class="bi bi-clipboard-plus" aria-hidden="true"></i>Importar estado de cuenta</a>
+                <a class="side-link @Activo("TipoCambio")" asp-controller="TipoCambio" asp-action="Index"><i class="bi bi-currency-exchange" aria-hidden="true"></i>Tipo de cambio</a>
+
+                <div class="nav-section">Configuración</div>
+                <a class="side-link @Activo("Tarjetas")" asp-controller="Tarjetas" asp-action="Index"><i class="bi bi-credit-card" aria-hidden="true"></i>Tarjetas</a>
+                <a class="side-link @Activo("Categorias")" asp-controller="Categorias" asp-action="Index"><i class="bi bi-tags" aria-hidden="true"></i>Categorías</a>
+                <a class="side-link @Activo("Cuenta", "Perfil")" asp-controller="Cuenta" asp-action="Perfil"><i class="bi bi-person-circle" aria-hidden="true"></i>Mi perfil</a>
+
+                <div class="side-help">
+                    <div class="side-help-title"><i class="bi bi-info-circle" aria-hidden="true"></i>Cómo se cuenta</div>
+                    <ul>
+                        <li><span>Compra en cuotas</span><b>1 cuota / mes</b></li>
+                        <li><span>Gasto fijo</span><b>se carga solo</b></li>
+                        <li><span>Después del cierre</span><b>mes siguiente</b></li>
+                        <li><span>Pesos y dólares</span><b>por separado</b></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="side-user">
+                    <span class="avatar av-1" aria-hidden="true">@Fmt.Iniciales(nombre)</span>
+                    <div class="who">
+                        <strong>@nombre</strong>
+                        <span>@actual?.Email</span>
+                    </div>
+                    <form method="post" asp-controller="Cuenta" asp-action="Logout" class="m-0">
+                        <button class="side-logout" type="submit" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+        <div class="backdrop" data-nav-close></div>
+
+        <div class="main">
+            <header class="topbar">
+                <button class="burger" type="button" data-nav-toggle aria-label="Abrir menú" aria-controls="sidebar"><i class="bi bi-list"></i></button>
+                <div class="crumbs">
+                    <span class="crumb-root">@seccion</span>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    <strong>@titulo</strong>
+                </div>
+                <div class="topbar-right">
+                    <span class="period-chip"><i class="bi bi-calendar3" aria-hidden="true"></i>@Fmt.MesAnioCap(Reloj.Hoy)</span>
+                    <a class="btn btn-primary btn-new" asp-controller="Gastos" asp-action="Nuevo"><i class="bi bi-plus-lg"></i><span>Nuevo gasto</span></a>
+                    <div class="dropdown">
+                        <button class="user-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menú de usuario">
+                            <span class="avatar sm av-1" aria-hidden="true">@Fmt.Iniciales(nombre)</span>
+                            <span class="meta"><strong>@nombre</strong><span>@actual?.Email</span></span>
+                            <i class="bi bi-chevron-down text-muted-x" style="font-size:.75rem"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="dropdown-header">@actual?.Email</li>
+                            <li><a class="dropdown-item" asp-controller="Cuenta" asp-action="Perfil"><i class="bi bi-person"></i>Mi perfil</a></li>
+                            <li><a class="dropdown-item" asp-controller="Tarjetas" asp-action="Index"><i class="bi bi-credit-card"></i>Tarjetas</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form method="post" asp-controller="Cuenta" asp-action="Logout" class="m-0">
+                                    <button class="dropdown-item danger" type="submit"><i class="bi bi-box-arrow-right"></i>Cerrar sesión</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content" id="contenido">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @if (ViewData["OcultarFab"] is not true)
+    {
+        <a class="fab" asp-controller="Gastos" asp-action="Nuevo" aria-label="Nuevo gasto" title="Nuevo gasto"><i class="bi bi-plus-lg"></i></a>
+    }
+
+    <partial name="_Flash" />
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

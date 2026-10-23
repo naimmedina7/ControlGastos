@@ -1,0 +1,81 @@
+@model PresupuestosVm
+@{
+    ViewData["Title"] = "Presupuestos";
+    ViewData["Section"] = "Análisis";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">@Fmt.MesAnioCap(Model.Mes)</span>
+        <h1>Presupuestos</h1>
+        <p>Un límite mensual por categoría. Te avisamos al llegar al @EstadoPresupuesto.UmbralAviso.ToString("0")% y cuando lo pasas.</p>
+    </div>
+</div>
+
+<div class="grid-2-1 align-start">
+    <section class="card-x">
+        <div class="card-head"><div><h2>Este mes</h2><div class="sub">Incluye compras al contado, cuotas del mes y gastos fijos de cada categoría.</div></div></div>
+        @if (Model.Estados.Count == 0)
+        {
+            <div class="empty"><div class="empty-icon"><i class="bi bi-piggy-bank"></i></div><h3>Sin presupuestos</h3><p>Agrega uno a la derecha, por ejemplo "Delivery y comidas: $ 4.000 por mes".</p></div>
+        }
+        else
+        {
+            <div class="card-body-x">
+                <partial name="_Presupuestos" model="Model.Estados" />
+            </div>
+            <div class="table-wrap">
+                <table class="table-x">
+                    <thead><tr><th scope="col">Categoría</th><th scope="col" class="amount">Límite mensual</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Estados)
+                        {
+                            <tr>
+                                <th scope="row">@e.Presupuesto.Categoria.Nombre @Fmt.MonedaBadge(e.Presupuesto.Moneda)</th>
+                                <td class="amount">@Fmt.Money(e.Presupuesto.MontoMensual, e.Presupuesto.Moneda)</td>
+                                <td class="row-actions">
+                                    <form method="post" asp-action="Eliminar" asp-route-id="@e.Presupuesto.Id" class="d-inline" data-confirm="¿Eliminar el presupuesto de &quot;@e.Presupuesto.Categoria.Nombre&quot;?">
+                                        <button type="submit" class="btn-icon danger" title="Eliminar" aria-label="Eliminar presupuesto de @e.Presupuesto.Categoria.Nombre"><i class="bi bi-trash3"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <aside class="card-x">
+        <div class="card-head"><div><h2>Agregar o cambiar</h2><div class="sub">Si la categoría ya tiene presupuesto en esa moneda, se actualiza.</div></div></div>
+        <div class="card-body-x">
+            <div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+            <form method="post" asp-action="Guardar" data-validate novalidate>
+                <div class="mb-3">
+                    <label asp-for="Form.CategoriaId" class="form-label">Categoría</label>
+                    <select asp-for="Form.CategoriaId" class="form-select" required>
+                        <option value="">Elige una categoría…</option>
+                        @foreach (var c in Model.Categorias)
+                        {
+                            <option value="@c.Id">@c.Nombre</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Form.CategoriaId" class="field-error"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Form.MontoMensual" class="form-label">Límite por mes</label>
+                    <div class="input-group">
+                        <select asp-for="Form.Moneda" class="form-select money-cur" aria-label="Moneda">
+                            <option value="UYU">$ UYU</option>
+                            <option value="USD">US$ USD</option>
+                        </select>
+                        <input asp-for="Form.MontoMensual" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required placeholder="0.00"
+                               value="@(Model.Form.MontoMensual > 0 ? Model.Form.MontoMensual.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "")" />
+                    </div>
+                    <span asp-validation-for="Form.MontoMensual" class="field-error"></span>
+                </div>
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-check2"></i>Guardar presupuesto</button>
+            </form>
+        </div>
+    </aside>
+</div>

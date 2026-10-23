@@ -1,0 +1,107 @@
+@model PlanesVm
+@{
+    ViewData["Title"] = "Cuotas pendientes";
+    ViewData["Section"] = "Gastos";
+    var porMes = Model.Planes.GroupBy(p => p.Gasto.UltimoPeriodo).OrderBy(g => g.Key).ToList();
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Al @Fmt.MesAnio(Model.Mes)</span>
+        <h1>Cuotas pendientes</h1>
+        <p>Las compras en cuotas que todavía no terminaste de pagar, ordenadas por el mes en que se liberan.</p>
+    </div>
+</div>
+
+<section class="kpi-grid kpi-3" aria-label="Resumen de cuotas">
+    <article class="card-x kpi featured">
+        <div class="kpi-top"><span class="kpi-label">Falta pagar en pesos</span><span class="kpi-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(Model.Saldo(Moneda.UYU))</div>
+        <div class="kpi-meta">incluye la cuota de @Fmt.MesAnio(Model.Mes)</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Falta pagar en dólares</span><span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(Model.Saldo(Moneda.USD), Moneda.USD)</div>
+        <div class="kpi-meta">@Model.Planes.Count(p => p.Gasto.Moneda == Moneda.USD) plan(es)</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Cuotas de este mes</span><span class="kpi-icon accent"><i class="bi bi-calendar2-range" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(Model.CuotaDelMes(Moneda.UYU))</div>
+        <div class="kpi-meta">
+            <span>@Model.Planes.Count plan(es) activos</span>
+            @if (Model.CuotaDelMes(Moneda.USD) > 0) { <span>+ @Fmt.Money(Model.CuotaDelMes(Moneda.USD), Moneda.USD)</span> }
+        </div>
+    </article>
+</section>
+
+@if (Model.Planes.Count == 0)
+{
+    <section class="card-x">
+        <div class="empty">
+            <div class="empty-icon"><i class="bi bi-emoji-smile"></i></div>
+            <h3>No tienes cuotas pendientes</h3>
+            <p>Cuando cargues una compra en cuotas, la vas a ver acá hasta que termine.</p>
+        </div>
+    </section>
+}
+else
+{
+    @foreach (var grupo in porMes)
+    {
+        <section class="card-x mb-4">
+            <div class="card-head">
+                <div>
+                    <h2>Terminan en @Fmt.MesAnio(grupo.Key)</h2>
+                    <div class="sub">
+                        Desde @Fmt.MesAnio(grupo.Key.AddMonths(1)) se liberan
+                        @string.Join(" + ", grupo.GroupBy(p => p.Gasto.Moneda).OrderBy(m => m.Key).Select(m => Fmt.Money(m.Sum(p => p.Gasto.MontoCuota), m.Key))) por mes
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrap mt-2">
+                <table class="table-x">
+                    <thead>
+                        <tr>
+                            <th scope="col">Compra</th>
+                            <th scope="col" class="hide-sm">Medio de pago</th>
+                            <th scope="col">Avance</th>
+                            <th scope="col" class="amount hide-sm">Cuota</th>
+                            <th scope="col" class="amount">Falta pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in grupo)
+                        {
+                            var g = p.Gasto;
+                            <tr>
+                                <td>
+                                    <div class="cell-main">
+                                        @Fmt.IconoCategoria(g.Categoria)
+                                        <div>
+                                            <div class="cell-title"><a asp-action="Editar" asp-route-id="@g.Id" class="text-reset">@g.Descripcion</a> @Fmt.MonedaBadge(g.Moneda)</div>
+                                            <div class="cell-sub">@Fmt.MesCortoAnio(g.PrimerPeriodo) → @Fmt.MesCortoAnio(g.UltimoPeriodo)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="hide-sm"><div class="cell-main">@Fmt.Punto(g.Tarjeta?.Color ?? "#64748b")<span class="cell-nowrap">@g.MedioDePago</span></div></td>
+                                <td class="cell-nowrap">
+                                    @if (p.CuotaEsteMes > 0)
+                                    {
+                                        <span class="cuota-pill">@p.CuotaEsteMes/@g.CantidadCuotas</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="chip chip-unico">Empieza en @Fmt.MesCortoAnio(g.PrimerPeriodo)</span>
+                                    }
+                                    <div class="cell-sub">@p.Faltan cuota(s) por pagar <span class="progress-mini" aria-hidden="true"><span style="width:@(p.Pagadas * 100 / g.CantidadCuotas)%"></span></span></div>
+                                </td>
+                                <td class="amount hide-sm">@Fmt.Money(g.MontoCuota, g.Moneda)</td>
+                                <td class="amount">@Fmt.Money(p.Saldo, g.Moneda)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}

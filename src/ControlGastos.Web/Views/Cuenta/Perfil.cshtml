@@ -1,0 +1,123 @@
+@model PerfilVm
+@{
+    ViewData["Title"] = "Mi perfil";
+    ViewData["Section"] = "Configuración";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Cuenta</span>
+        <h1>Mi perfil</h1>
+        <p>Tus datos de acceso y la seguridad de tu cuenta.</p>
+    </div>
+</div>
+
+<div class="grid-1-1 align-start">
+    <section class="card-x">
+        <div class="card-head"><div><h2>Datos de la cuenta</h2></div></div>
+        <div class="card-body-x">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <span class="avatar lg av-1" aria-hidden="true">@Fmt.Iniciales(Model.Nombre)</span>
+                <div>
+                    <strong class="d-block" style="font-size:1.1rem">@Model.Nombre</strong>
+                    <span class="text-2">@Model.Email</span>
+                </div>
+            </div>
+            <dl class="detail-grid">
+                <div class="detail"><dt>Cuenta creada</dt><dd>@Fmt.Fecha(DateOnly.FromDateTime(Model.CreadoEn))</dd></div>
+                <div class="detail"><dt>Gastos cargados</dt><dd>@Model.CantidadGastos</dd></div>
+                <div class="detail"><dt>Tarjetas</dt><dd>@Model.CantidadTarjetas</dd></div>
+                <div class="detail"><dt>Privacidad</dt><dd>Solo tú ves estos datos</dd></div>
+            </dl>
+        </div>
+    </section>
+
+    <section class="card-x">
+        <div class="card-head">
+            <div>
+                <h2>Cambiar contraseña</h2>
+                <div class="sub">Al cambiarla se cierran las sesiones abiertas en otros dispositivos.</div>
+            </div>
+        </div>
+        <div class="card-body-x">
+            <div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+            <form method="post" asp-action="CambiarPassword" novalidate data-validate>
+                <div class="mb-3">
+                    <label asp-for="Password.Actual" class="form-label">Contraseña actual</label>
+                    <input asp-for="Password.Actual" class="form-control" autocomplete="current-password" required />
+                    <span asp-validation-for="Password.Actual" class="field-error"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password.Nueva" class="form-label">Contraseña nueva</label>
+                    <input asp-for="Password.Nueva" class="form-control" autocomplete="new-password" required minlength="8" />
+                    <div class="form-hint">Al menos 8 caracteres, con una letra minúscula y un número.</div>
+                    <span asp-validation-for="Password.Nueva" class="field-error"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Password.Confirmar" class="form-label">Repetir contraseña nueva</label>
+                    <input asp-for="Password.Confirmar" class="form-control" autocomplete="new-password" required />
+                    <span asp-validation-for="Password.Confirmar" class="field-error"></span>
+                </div>
+                <button class="btn btn-primary" type="submit"><i class="bi bi-shield-lock"></i>Actualizar contraseña</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<div class="grid-1-1 align-start mt-4">
+    <section class="card-x" aria-labelledby="resp-title">
+        <div class="card-head">
+            <div>
+                <h2 id="resp-title">Respaldo de tus datos</h2>
+                <div class="sub">Un archivo con todo: gastos, cuotas, gastos fijos, tarjetas, categorías, presupuestos y cotizaciones propias.</div>
+            </div>
+        </div>
+        <div class="card-body-x">
+            <a class="btn btn-primary" asp-action="DescargarRespaldo"><i class="bi bi-download"></i>Descargar respaldo</a>
+            <p class="form-hint mt-2">Guárdalo en un lugar seguro (por ejemplo, tu Drive). Contiene tus datos financieros: no lo compartas.</p>
+
+            <details class="restore-box mt-4">
+                <summary><i class="bi bi-arrow-counterclockwise"></i> Restaurar desde un archivo</summary>
+                <div class="alert-x err mt-3" role="note">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                    <div><strong>Reemplaza todos tus datos actuales</strong> por los del archivo. Te conviene descargar un respaldo antes. Si el archivo tiene algún error, no se cambia nada.</div>
+                </div>
+                <form method="post" asp-action="RestaurarRespaldo" enctype="multipart/form-data" data-validate novalidate
+                      data-confirm="¿Reemplazar todos tus datos por los del archivo? Esta acción no se puede deshacer.">
+                    <div class="mb-3">
+                        <label for="archivo" class="form-label">Archivo de respaldo (.json)</label>
+                        <input type="file" id="archivo" name="archivo" class="form-control" accept=".json,application/json" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="passwordActual" class="form-label">Tu contraseña</label>
+                        <input type="password" id="passwordActual" name="passwordActual" class="form-control" autocomplete="current-password" required />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmo" name="confirmo" value="true" required />
+                        <label class="form-check-label" for="confirmo">Entiendo que mis datos actuales se reemplazan</label>
+                    </div>
+                    <button type="submit" class="btn btn-soft-danger"><i class="bi bi-arrow-counterclockwise"></i>Restaurar</button>
+                </form>
+            </details>
+        </div>
+    </section>
+
+    <section class="card-x" aria-labelledby="app-title">
+        <div class="card-head">
+            <div>
+                <h2 id="app-title">Mis·Gastos en tu celular</h2>
+                <div class="sub">Instálala como una app: ícono en la pantalla de inicio y pantalla completa, sin la barra del navegador.</div>
+            </div>
+        </div>
+        <div class="card-body-x">
+            <button type="button" class="btn btn-primary mb-3" data-instalar hidden><i class="bi bi-phone"></i>Instalar en este dispositivo</button>
+            <p class="text-2 mb-2" data-instalada hidden><i class="bi bi-check-circle text-success"></i> Ya la estás usando como app.</p>
+            <ul class="install-steps">
+                <li><i class="bi bi-android2" aria-hidden="true"></i><div><strong>Android (Chrome)</strong><span>Menú ⋮ → <em>Instalar app</em> o <em>Agregar a la pantalla principal</em>.</span></div></li>
+                <li><i class="bi bi-apple" aria-hidden="true"></i><div><strong>iPhone (Safari)</strong><span>Botón Compartir → <em>Agregar a inicio</em>.</span></div></li>
+                <li><i class="bi bi-laptop" aria-hidden="true"></i><div><strong>Computadora (Chrome o Edge)</strong><span>Ícono de instalar a la derecha de la barra de direcciones.</span></div></li>
+            </ul>
+            <p class="form-hint mt-3">Por privacidad, la app instalada no guarda tus gastos en el dispositivo: sin conexión solo muestra un aviso.</p>
+        </div>
+    </section>
+</div>

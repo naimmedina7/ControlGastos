@@ -1,0 +1,10 @@
+@model DateOnly
+@{
+    string controlador = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Panel";
+}
+<form method="get" asp-controller="@controlador" asp-action="Index" class="month-nav" aria-label="Elegir mes">
+    <a class="step" asp-controller="@controlador" asp-action="Index" asp-route-mes="@Fmt.MesParam(Model.AddMonths(-1))" aria-label="Mes anterior" title="Mes anterior"><i class="bi bi-chevron-left"></i></a>
+    <label for="mesNav" class="visually-hidden">Elegir mes</label>
+    <span class="label"><i class="bi bi-calendar3" aria-hidden="true"></i><input type="month" name="mes" id="mesNav" value="@Fmt.MesParam(Model)" data-autosubmit /></span>
+    <a class="step" asp-controller="@controlador" asp-action="Index" asp-route-mes="@Fmt.MesParam(Model.AddMonths(1))" aria-label="Mes siguiente" title="Mes siguiente"><i class="bi bi-chevron-right"></i></a>
+</form>

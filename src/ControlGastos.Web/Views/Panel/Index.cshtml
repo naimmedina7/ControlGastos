@@ -1,0 +1,211 @@
+@model PanelVm
+@inject Reloj Reloj
+@{
+    ViewData["Title"] = "Inicio";
+    ViewData["Section"] = "General";
+    var r = Model.Resumen;
+
+    decimal uyu = r.Total(Moneda.UYU);
+    decimal uyuAnterior = Model.MesAnterior?.Total(Moneda.UYU) ?? 0;
+    decimal delta = uyuAnterior > 0 ? (uyu - uyuAnterior) / uyuAnterior * 100 : 0;
+    string deltaCls = Math.Abs(delta) < 0.5m ? "flat" : (delta > 0 ? "up" : "down");
+    string deltaIcon = deltaCls == "flat" ? "bi-dash" : (delta > 0 ? "bi-arrow-up-right" : "bi-arrow-down-right");
+
+    decimal max = Model.Proximos.Count > 0 ? Model.Proximos.Max(p => p.UYU) : 0;
+    var (step, lines) = Fmt.NiceScale(max);
+    decimal top = step * lines;
+    var porCategoria = (r.PorCategoria, Model.EsMesActual ? "Todavía no hay gastos este mes." : "No hay gastos en este mes.");
+    var porTarjeta = (r.PorTarjeta, "Sin gastos en este mes.");
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">@Fmt.MesAnioCap(Model.Mes)@(Model.EsMesActual ? " · mes en curso" : "")</span>
+        <h1>@Fmt.Saludo(Reloj.Ahora), @Model.Nombre</h1>
+        <p>Lo que pagas este mes, en qué se va y lo que ya tienes comprometido en cuotas.</p>
+    </div>
+    <div class="page-actions">
+        <partial name="_MesNav" model="Model.Mes" />
+    </div>
+</div>
+
+<section class="kpi-grid" aria-label="Indicadores del mes">
+    <article class="card-x kpi featured">
+        <div class="kpi-top">
+            <span class="kpi-label">Total del mes en pesos</span>
+            <span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+        </div>
+        <div class="kpi-value">@Fmt.MoneyHtml(uyu)</div>
+        <div class="kpi-meta">
+            @if (uyuAnterior > 0)
+            {
+                <span class="delta @deltaCls"><i class="bi @deltaIcon" aria-hidden="true"></i>@(Math.Abs(delta).ToString("0.0"))%</span>
+                <span>vs. @Fmt.MesAnio(Model.Mes.AddMonths(-1))</span>
+            }
+            else
+            {
+                <span>Sin gastos el mes anterior</span>
+            }
+        </div>
+    </article>
+
+    <article class="card-x kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Total del mes en dólares</span>
+            <span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span>
+        </div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.USD), Moneda.USD)</div>
+        <div class="kpi-meta">@r.Lineas.Count(l => l.Gasto.Moneda == Moneda.USD) gasto(s) en USD</div>
+    </article>
+
+    <article class="card-x kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Cuotas este mes</span>
+            <span class="kpi-icon accent"><i class="bi bi-calendar2-range" aria-hidden="true"></i></span>
+        </div>
+        <div class="kpi-value">@r.EnCuotas</div>
+        <div class="kpi-meta">
+            @if (r.TerminanEsteMes > 0) { <span class="chip chip-ok">@r.TerminanEsteMes terminan este mes</span> }
+            else { <span>de @r.Lineas.Count gastos del mes</span> }
+        </div>
+    </article>
+
+    <article class="card-x kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Comprometido a futuro</span>
+            <span class="kpi-icon accent"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+        </div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Pendiente(Moneda.UYU))</div>
+        <div class="kpi-meta">
+            @if (r.Pendiente(Moneda.USD) > 0) { <span>+ @Fmt.Money(r.Pendiente(Moneda.USD), Moneda.USD)</span> }
+            <span>cuotas después de @Fmt.MesAnio(Model.Mes)</span>
+        </div>
+    </article>
+</section>
+
+<div class="grid-2-1">
+    <section class="card-x" aria-labelledby="evo-title">
+        <div class="card-head">
+            <div>
+                <h2 id="evo-title">Este mes y los próximos 5</h2>
+                <div class="sub">En pesos · cuotas ya cargadas más gastos fijos previstos</div>
+            </div>
+            <a class="link-arrow" asp-controller="Reportes" asp-action="Index">Reportes <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="card-body-x">
+            <div class="chart" role="img" aria-label="Gráfico de barras del total en pesos de este mes y los cinco siguientes">
+                <div class="chart-grid">
+                    @for (int i = lines; i >= 0; i--)
+                    {
+                        <div><span>@Fmt.MoneyShort(step * i)</span></div>
+                    }
+                </div>
+                <div class="chart-bars">
+                    @foreach (var p in Model.Proximos)
+                    {
+                        bool esEste = p.Mes == Model.Mes;
+                        <div class="bar-col @(esEste ? "current" : "")" tabindex="0">
+                            <div class="bar-wrap">
+                                <div class="bar" style="height:@Fmt.Pct(p.UYU, top)%">
+                                    @if (esEste)
+                                    {
+                                        <span class="bar-value">@Fmt.MoneyShort(p.UYU)</span>
+                                    }
+                                    <span class="bar-tip">@Fmt.Money(p.UYU)@if (p.USD > 0) { <text> + @Fmt.Money(p.USD, Moneda.USD)</text> }<small>@Fmt.MesAnioCap(p.Mes)@if (p.PrevistoUYU > 0) { <text> · @Fmt.Money(p.PrevistoUYU) en fijos previstos</text> }</small></span>
+                                </div>
+                            </div>
+                            <span class="bar-label">@Fmt.MesCorto(p.Mes)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <table class="visually-hidden">
+                <caption>Total por mes</caption>
+                <tbody>
+                    @foreach (var p in Model.Proximos)
+                    {
+                        <tr><th scope="row">@Fmt.MesAnio(p.Mes)</th><td>@Fmt.Money(p.UYU)</td><td>@Fmt.Money(p.USD, Moneda.USD)</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card-x" aria-labelledby="cat-title">
+        <div class="card-head">
+            <div>
+                <h2 id="cat-title">Por categoría</h2>
+                <div class="sub">@Fmt.MesAnioCap(Model.Mes)</div>
+            </div>
+        </div>
+        <div class="card-body-x">
+            <partial name="_ListaGrupos" model="porCategoria" />
+        </div>
+    </section>
+</div>
+
+@if (Model.Presupuestos.Count > 0)
+{
+    <section class="card-x mb-4" aria-labelledby="pres-title">
+        <div class="card-head">
+            <div>
+                <h2 id="pres-title">Presupuestos de @Fmt.MesAnio(Model.Mes)</h2>
+                <div class="sub">@Model.Presupuestos.Count(p => p.Nivel == NivelPresupuesto.Excedido) excedido(s) · @Model.Presupuestos.Count(p => p.Nivel == NivelPresupuesto.Cerca) cerca del límite</div>
+            </div>
+            <a class="link-arrow" asp-controller="Presupuestos" asp-action="Index">Presupuestos <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="card-body-x">
+            <partial name="_Presupuestos" model="Model.Presupuestos.Take(6).ToList()" />
+        </div>
+    </section>
+}
+
+<div class="grid-1-1 align-start">
+    <section class="card-x" aria-labelledby="tar-title">
+        <div class="card-head">
+            <div>
+                <h2 id="tar-title">Por tarjeta</h2>
+                <div class="sub">Lo que paga cada medio de pago en @Fmt.MesAnio(Model.Mes)</div>
+            </div>
+            <a class="link-arrow" asp-controller="Tarjetas" asp-action="Index">Tarjetas <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="card-body-x">
+            <partial name="_ListaGrupos" model="porTarjeta" />
+        </div>
+    </section>
+
+    <section class="card-x" aria-labelledby="ult-title">
+        <div class="card-head">
+            <div>
+                <h2 id="ult-title">Últimos gastos del mes</h2>
+                <div class="sub">@r.Lineas.Count en total</div>
+            </div>
+            <a class="link-arrow" asp-controller="Gastos" asp-action="Index" asp-route-mes="@Fmt.MesParam(Model.Mes)">Ver todos <i class="bi bi-arrow-right"></i></a>
+        </div>
+        @if (r.Lineas.Count == 0)
+        {
+            <div class="empty">
+                <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+                <h3>Sin gastos en @Fmt.MesAnio(Model.Mes)</h3>
+                <p>Carga tu primer gasto para verlo acá.</p>
+                <a class="btn btn-primary" asp-controller="Gastos" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto</a>
+            </div>
+        }
+        else
+        {
+            <ul class="mini-list">
+                @foreach (var l in r.Lineas.Take(6))
+                {
+                    <li>
+                        @Fmt.IconoCategoria(l.Gasto.Categoria, "sm")
+                        <div class="grow">
+                            <div class="cell-title">@l.Gasto.Descripcion</div>
+                            <div class="cell-sub">@Fmt.FechaCorta(l.Gasto.Fecha) · @l.Gasto.MedioDePago@if (l.Gasto.EnCuotas) { <text> · cuota @l.Numero/@l.Gasto.CantidadCuotas</text> }</div>
+                        </div>
+                        <span class="money">@Fmt.Money(l.Monto, l.Gasto.Moneda)</span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>

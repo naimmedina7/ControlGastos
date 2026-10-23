@@ -1,0 +1,105 @@
+@model RecurrenteFormVm
+@{
+    bool editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar gasto fijo" : "Nuevo gasto fijo";
+    ViewData["Section"] = "Gastos fijos";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow"><a asp-action="Index" class="text-reset"><i class="bi bi-arrow-left"></i> Gastos fijos</a></span>
+        <h1>@ViewData["Title"]</h1>
+        <p>@(editando
+            ? "Los cambios aplican a los meses que todavía no se cargaron. Los meses ya cargados se editan desde Gastos del mes."
+            : "Si el primer mes ya pasó, se cargan de una vez todos los meses desde ese hasta hoy.")</p>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+
+<form method="post" asp-action="@(editando ? "Editar" : "Nuevo")" asp-route-id="@Model.Id" data-validate novalidate class="form-narrow">
+    <div class="card-x">
+        <div class="form-section">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Descripcion" class="form-label">Descripción</label>
+                    <input asp-for="Descripcion" class="form-control" maxlength="120" placeholder="Ej.: Facultad, alquiler, Spotify" required autofocus />
+                    <span asp-validation-for="Descripcion" class="field-error"></span>
+                </div>
+                <div class="col-md-7">
+                    <label asp-for="Monto" class="form-label">Monto mensual</label>
+                    <div class="input-group">
+                        <select asp-for="Moneda" class="form-select money-cur" aria-label="Moneda">
+                            <option value="UYU">$ UYU</option>
+                            <option value="USD">US$ USD</option>
+                        </select>
+                        <input asp-for="Monto" class="form-control" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required
+                               value="@(Model.Monto > 0 ? Model.Monto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "")" />
+                    </div>
+                    <span asp-validation-for="Monto" class="field-error"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="DiaDelMes" class="form-label">Día de cobro</label>
+                    <input asp-for="DiaDelMes" class="form-control" type="number" min="1" max="31" step="1" inputmode="numeric" required />
+                    <div class="form-hint">En meses más cortos, el último día.</div>
+                    <span asp-validation-for="DiaDelMes" class="field-error"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="form-section-title">Medio de pago</h2>
+            <div class="method-options" role="radiogroup" aria-label="Medio de pago">
+                @foreach (var t in Model.Tarjetas)
+                {
+                    <div class="method-option">
+                        <input type="radio" name="TarjetaId" id="tj-@t.Id" value="@t.Id" checked="@(Model.TarjetaId == t.Id)" />
+                        <label for="tj-@t.Id">
+                            <i class="bi @(t.Tipo == TipoTarjeta.Credito ? "bi-credit-card" : "bi-credit-card-2-front")" style="color:@Fmt.ColorSeguro(t.Color)" aria-hidden="true"></i>
+                            <strong>@t.Nombre</strong><span>@Fmt.Tipo(t.Tipo)</span>
+                        </label>
+                    </div>
+                }
+                <div class="method-option">
+                    <input type="radio" name="TarjetaId" id="tj-none" value="" checked="@(Model.TarjetaId == null)" />
+                    <label for="tj-none"><i class="bi bi-cash-stack" aria-hidden="true"></i><strong>Efectivo</strong><span>o transferencia</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="CategoriaId" class="form-label">Categoría</label>
+                    <select asp-for="CategoriaId" class="form-select">
+                        <option value="">Sin categoría</option>
+                        @foreach (var c in Model.Categorias)
+                        {
+                            <option value="@c.Id">@c.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label asp-for="DesdeMes" class="form-label">Desde</label>
+                    <input asp-for="DesdeMes" class="form-control" type="month" required />
+                    <span asp-validation-for="DesdeMes" class="field-error"></span>
+                </div>
+                <div class="col-6">
+                    <label asp-for="HastaMes" class="form-label">Hasta <span class="text-muted-x">(opcional)</span></label>
+                    <input asp-for="HastaMes" class="form-control" type="month" />
+                    <div class="form-hint">Vacío = sin fecha de fin.</div>
+                    <span asp-validation-for="HastaMes" class="field-error"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Notas" class="form-label">Notas <span class="text-muted-x">(opcional)</span></label>
+                    <textarea asp-for="Notas" class="form-control" rows="2" maxlength="500"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-ghost" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i>@(editando ? "Guardar cambios" : "Crear gasto fijo")</button>
+        </div>
+    </div>
+</form>

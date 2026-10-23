@@ -1,0 +1,22 @@
+{
+  "name": "Mis·Gastos",
+  "short_name": "Mis·Gastos",
+  "description": "Control de gastos personales: tarjetas, cuotas, gastos fijos y reportes.",
+  "lang": "es-UY",
+  "id": "/panel",
+  "start_url": "/panel",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f5f7",
+  "theme_color": "#059669",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Nuevo gasto", "url": "/gastos/nuevo", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Gastos del mes", "url": "/gastos", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

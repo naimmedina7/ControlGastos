@@ -1,0 +1,27 @@
+@model List<EstadoPresupuesto>
+@* Barras de avance de presupuestos. El estado se comunica con ícono + texto, no solo con color. *@
+<ul class="budget-list">
+    @foreach (var e in Model)
+    {
+        var p = e.Presupuesto;
+        var (cls, icono, texto) = e.Nivel switch
+        {
+            NivelPresupuesto.Excedido => ("excedido", "bi-exclamation-octagon", $"Excedido en {Fmt.Money(-e.Disponible, p.Moneda)}"),
+            NivelPresupuesto.Cerca => ("cerca", "bi-exclamation-triangle", $"Quedan {Fmt.Money(e.Disponible, p.Moneda)}"),
+            _ => ("ok", "bi-check-circle", $"Quedan {Fmt.Money(e.Disponible, p.Moneda)}"),
+        };
+        <li class="budget-row @cls">
+            @Fmt.IconoCategoria(p.Categoria, "sm")
+            <div class="grow">
+                <div class="budget-head">
+                    <span class="cell-title">@p.Categoria.Nombre @Fmt.MonedaBadge(p.Moneda)</span>
+                    <span class="num"><strong>@Fmt.Money(e.Gastado, p.Moneda)</strong> <span class="text-muted-x">de @Fmt.Money(p.MontoMensual, p.Moneda)</span></span>
+                </div>
+                <div class="budget-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@Math.Min(100, e.Porcentaje).ToString(System.Globalization.CultureInfo.InvariantCulture)" aria-label="@p.Categoria.Nombre: @e.Porcentaje.ToString("0.#")% del presupuesto">
+                    <span style="width:@Math.Min(100, e.Porcentaje).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%"></span>
+                </div>
+                <div class="budget-state"><i class="bi @icono" aria-hidden="true"></i>@e.Porcentaje.ToString("0")% · @texto</div>
+            </div>
+        </li>
+    }
+</ul>

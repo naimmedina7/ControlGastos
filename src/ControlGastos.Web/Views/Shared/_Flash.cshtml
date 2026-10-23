@@ -1,0 +1,22 @@
+@{
+    var ok = TempData["Ok"] as string;
+    var err = TempData["Error"] as string;
+}
+<div class="toast-stack" aria-live="polite" aria-atomic="true">
+    @if (!string.IsNullOrEmpty(ok))
+    {
+        <div class="flash ok" role="status" data-autohide>
+            <span class="flash-icon"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+            <div class="flash-body"><strong>Listo</strong><span>@ok</span></div>
+            <button type="button" class="flash-close" aria-label="Cerrar" data-flash-close><i class="bi bi-x-lg"></i></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(err))
+    {
+        <div class="flash err" role="alert">
+            <span class="flash-icon"><i class="bi bi-exclamation-octagon" aria-hidden="true"></i></span>
+            <div class="flash-body"><strong>No se pudo completar</strong><span>@err</span></div>
+            <button type="button" class="flash-close" aria-label="Cerrar" data-flash-close><i class="bi bi-x-lg"></i></button>
+        </div>
+    }
+</div>

@@ -1,0 +1,63 @@
+@model List<TarjetaFilaVm>
+@{
+    ViewData["Title"] = "Tarjetas";
+    ViewData["Section"] = "Configuración";
+    DateOnly mes = ViewBag.Mes;
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Medios de pago</span>
+        <h1>Tarjetas</h1>
+        <p>Ponle a cada tarjeta un nombre que reconozcas. No se guardan números ni datos de la tarjeta.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Nueva"><i class="bi bi-plus-lg"></i>Nueva tarjeta</a>
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <section class="card-x">
+        <div class="empty">
+            <div class="empty-icon"><i class="bi bi-credit-card"></i></div>
+            <h3>Todavía no tienes tarjetas</h3>
+            <p>Crea tu primera tarjeta, por ejemplo "Itaú débito" o "Visa crédito".</p>
+            <a class="btn btn-primary" asp-action="Nueva"><i class="bi bi-plus-lg"></i>Nueva tarjeta</a>
+        </div>
+    </section>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (var f in Model)
+        {
+            var t = f.Tarjeta;
+            <article class="card-x pay-card @(t.Activa ? "" : "inactive")">
+                <div class="pay-card-top" style="--card:@Fmt.ColorSeguro(t.Color)">
+                    <i class="bi @(t.Tipo == TipoTarjeta.Credito ? "bi-credit-card" : "bi-credit-card-2-front")" aria-hidden="true"></i>
+                    <div>
+                        <h2>@t.Nombre</h2>
+                        <span>@Fmt.Tipo(t.Tipo)@(t.CierreEfectivo is int c ? $" · cierra el {c}" : "")@(t.Activa ? "" : " · inactiva")</span>
+                    </div>
+                </div>
+                <dl class="pay-card-body">
+                    <div><dt>@Fmt.Cap(Fmt.MesAnio(mes))</dt><dd>@Fmt.Money(f.MesUYU)@if (f.MesUSD > 0) { <small> + @Fmt.Money(f.MesUSD, Moneda.USD)</small> }</dd></div>
+                    <div><dt>Gastos cargados</dt><dd>@f.CantidadGastos</dd></div>
+                </dl>
+                <div class="pay-card-actions">
+                    <a class="btn btn-light btn-sm" asp-action="Editar" asp-route-id="@t.Id"><i class="bi bi-pencil"></i>Editar</a>
+                    <form method="post" asp-action="CambiarEstado" asp-route-id="@t.Id" class="d-inline">
+                        <button type="submit" class="btn btn-light btn-sm"><i class="bi @(t.Activa ? "bi-pause-circle" : "bi-play-circle")"></i>@(t.Activa ? "Desactivar" : "Activar")</button>
+                    </form>
+                    @if (f.CantidadGastos == 0)
+                    {
+                        <form method="post" asp-action="Eliminar" asp-route-id="@t.Id" class="d-inline" data-confirm="¿Eliminar la tarjeta &quot;@t.Nombre&quot;?">
+                            <button type="submit" class="btn btn-soft-danger btn-sm"><i class="bi bi-trash3"></i>Eliminar</button>
+                        </form>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}

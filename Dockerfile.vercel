@@ -1,0 +1,22 @@
+# Imagen para Vercel (Container Runtime). Igual al Dockerfile, más el puerto que espera Vercel.
+# En el proyecto de Vercel configurar también la variable PORT=8080 (Vercel enruta al puerto de PORT; por defecto 80,
+# que un usuario sin privilegios no puede abrir).
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY src/ControlGastos.Web/ControlGastos.Web.csproj src/ControlGastos.Web/
+RUN dotnet restore src/ControlGastos.Web/ControlGastos.Web.csproj
+COPY src/ src/
+RUN dotnet publish src/ControlGastos.Web/ControlGastos.Web.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+COPY --from=build /app .
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    PORT=8080 \
+    Database__Provider=Postgres \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    DOTNET_EnableDiagnostics=0
+EXPOSE 8080
+USER $APP_UID
+ENTRYPOINT ["dotnet", "ControlGastos.Web.dll"]

@@ -1,0 +1,20 @@
+@{
+    Layout = "_AuthLayout";
+    int code = ViewBag.Code is int c ? c : 500;
+    var (titulo, texto) = code switch
+    {
+        404 => ("No encontramos esa página", "Puede que el enlace esté mal o que el dato ya no exista."),
+        403 => ("No tienes acceso a esta página", "Esta sección no está disponible para tu cuenta."),
+        429 => ("Demasiados intentos", "Espera un minuto y vuelve a intentar."),
+        _ => ("Algo salió mal", "Ocurrió un error inesperado. Vuelve a intentar en unos segundos."),
+    };
+    ViewData["Title"] = titulo;
+}
+<div class="error-wrap">
+    <div class="empty">
+        <div class="error-code">@code</div>
+        <h3>@titulo</h3>
+        <p>@texto</p>
+        <a class="btn btn-primary" href="/">Volver al inicio</a>
+    </div>
+</div>

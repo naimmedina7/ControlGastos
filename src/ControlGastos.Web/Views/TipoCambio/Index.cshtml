@@ -1,0 +1,123 @@
+@model TiposCambioVm
+@inject Reloj Reloj
+@{
+    ViewData["Title"] = "Tipo de cambio";
+    ViewData["Section"] = "Herramientas";
+    var nf = new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = ",", NumberGroupSeparator = "." };
+    string Valor(decimal? v) => v is decimal d ? "$ " + d.ToString("N2", nf) : "—";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Herramientas</span>
+        <h1>Tipo de cambio</h1>
+        <p>Cuántos pesos vale un dólar cada mes. Se completa solo con el promedio mensual del Banco Central del Uruguay y se usa en Reportes para ver todo en pesos.</p>
+    </div>
+    <div class="page-actions">
+        <form method="post" asp-action="Actualizar" class="m-0">
+            <button type="submit" class="btn btn-light"><i class="bi bi-arrow-repeat"></i>Actualizar desde el BCU</button>
+        </form>
+    </div>
+</div>
+
+@if (Model.MesesUsdSinCotizacion.Count > 0)
+{
+    <div class="alert-x err mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        <div>Sin cotización para @string.Join(", ", Model.MesesUsdSinCotizacion.Select(Fmt.MesAnio)): esos gastos en dólares no se pueden pasar a pesos. Carga un ajuste manual o vuelve a intentar la actualización.</div>
+    </div>
+}
+
+<div class="grid-2-1 align-start">
+    <section class="card-x">
+        <div class="card-head">
+            <div>
+                <h2>Últimos 12 meses</h2>
+                <div class="sub">
+                    Fuente: @CotizacionService.Fuente (promedio del mes).
+                    @if (Model.UltimaActualizacionBcu is DateTime ult) { <span>Última consulta: @Reloj.ALocal(ult).ToString("dd/MM/yyyy HH:mm").</span> }
+                </div>
+            </div>
+        </div>
+        <div class="table-wrap mt-2">
+            <table class="table-x">
+                <thead>
+                    <tr>
+                        <th scope="col">Mes</th>
+                        <th scope="col" class="amount">BCU</th>
+                        <th scope="col" class="amount">Ajuste manual</th>
+                        <th scope="col" class="amount">Se usa</th>
+                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model.Meses)
+                    {
+                        <tr>
+                            <th scope="row" class="cell-nowrap">
+                                @Fmt.MesAnioCap(f.Mes)
+                                @if (f.EsMesActual && f.Bcu != null && !f.Bcu.Definitiva) { <span class="chip chip-unico ms-1">parcial</span> }
+                            </th>
+                            <td class="amount text-2">@Valor(f.Bcu?.UsdEnPesos)</td>
+                            <td class="amount">@Valor(f.Manual?.UsdEnPesos)</td>
+                            <td class="amount">
+                                <strong>@Valor(f.Usado)</strong>
+                                @if (f.Manual == null && f.Bcu == null && f.Usado != null) { <div class="cell-sub">del mes anterior</div> }
+                            </td>
+                            <td class="row-actions">
+                                @if (f.Manual != null)
+                                {
+                                    <form method="post" asp-action="Eliminar" asp-route-id="@f.Manual.Id" class="d-inline" data-confirm="¿Quitar el ajuste de @Fmt.MesAnio(f.Mes)? Vuelve a usarse el BCU.">
+                                        <button type="submit" class="btn-icon danger" title="Quitar ajuste" aria-label="Quitar ajuste de @Fmt.MesAnio(f.Mes)"><i class="bi bi-x-lg"></i></button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.AjustesAnteriores.Count > 0)
+        {
+            <div class="card-body-x">
+                <div class="group-label">Ajustes manuales anteriores</div>
+                <ul class="mini-list p-0">
+                    @foreach (var t in Model.AjustesAnteriores)
+                    {
+                        <li>
+                            <div class="grow"><span class="cell-title">@Fmt.MesAnioCap(t.Mes)</span></div>
+                            <span class="money">@Valor(t.UsdEnPesos)</span>
+                            <form method="post" asp-action="Eliminar" asp-route-id="@t.Id" class="d-inline" data-confirm="¿Quitar el ajuste de @Fmt.MesAnio(t.Mes)?">
+                                <button type="submit" class="btn-icon danger" title="Quitar ajuste" aria-label="Quitar ajuste de @Fmt.MesAnio(t.Mes)"><i class="bi bi-x-lg"></i></button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </section>
+
+    <aside class="card-x">
+        <div class="card-head"><div><h2>Ajuste manual</h2><div class="sub">Opcional. Úsalo si tu tarjeta te cobró a otra cotización: para ese mes manda tu valor.</div></div></div>
+        <div class="card-body-x">
+            <div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+            <form method="post" asp-action="Guardar" data-validate novalidate>
+                <div class="mb-3">
+                    <label asp-for="Form.Mes" class="form-label">Mes</label>
+                    <input asp-for="Form.Mes" type="month" class="form-control" required />
+                    <span asp-validation-for="Form.Mes" class="field-error"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Form.UsdEnPesos" class="form-label">1 US$ =</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input asp-for="Form.UsdEnPesos" type="number" min="0.0001" step="0.0001" inputmode="decimal" class="form-control" required placeholder="40.25"
+                               value="@(Model.Form.UsdEnPesos > 0 ? Model.Form.UsdEnPesos.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture) : "")" />
+                    </div>
+                    <span asp-validation-for="Form.UsdEnPesos" class="field-error"></span>
+                </div>
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-check2"></i>Guardar ajuste</button>
+            </form>
+        </div>
+    </aside>
+</div>

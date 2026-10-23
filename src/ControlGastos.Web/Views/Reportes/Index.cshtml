@@ -1,0 +1,235 @@
+@model ReporteVm
+@{
+    ViewData["Title"] = "Reportes";
+    ViewData["Section"] = "Análisis";
+    var r = Model.Reporte;
+    var mon = r.MonedaVisible;
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    string vistaParam = r.Vista.ToString();
+    string NombreVista(VistaMoneda v) => v switch { VistaMoneda.USD => "Dólares", VistaMoneda.Pesificado => "Todo en pesos", _ => "Pesos" };
+
+    // Categorías: las 7 principales y el resto en "Otras" (nunca más de 8 barras).
+    var cats = r.PorCategoria.Take(7).ToList();
+    var resto = r.PorCategoria.Skip(7).ToList();
+    if (resto.Count > 0) cats.Add(new TotalGrupo($"Otras ({resto.Count})", "#94a3b8", "bi-three-dots", resto.Sum(x => x.Total), resto.Sum(x => x.Cantidad)));
+
+    string datosMeses = System.Text.Json.JsonSerializer.Serialize(new
+    {
+        moneda = mon.ToString(),
+        meses = r.Meses.Select(m => new
+        {
+            etiqueta = Fmt.MesCorto(m.Mes) + " " + (m.Mes.Year % 100).ToString("00"),
+            largo = Fmt.MesAnioCap(m.Mes),
+            contado = m.Contado, cuotas = m.Cuotas, fijos = m.Fijos, proyectado = m.Proyectado,
+        }),
+    });
+    string datosCat = System.Text.Json.JsonSerializer.Serialize(new { moneda = mon.ToString(), items = cats.Select(c => new { nombre = c.Nombre, total = c.Total }) });
+    string datosTar = System.Text.Json.JsonSerializer.Serialize(new { moneda = mon.ToString(), items = r.PorTarjeta.Take(8).Select(c => new { nombre = c.Nombre, total = c.Total }) });
+    string periodo = $"{Fmt.MesAnio(r.Desde)} a {Fmt.MesAnio(r.Hasta < r.MesActual ? r.Hasta : r.MesActual)}";
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">Análisis</span>
+        <h1>Reportes</h1>
+        <p>Cómo evoluciona tu gasto, en qué se va y con qué lo pagas.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-light" asp-action="Exportar" asp-route-desde="@Fmt.MesParam(r.Desde)" asp-route-hasta="@Fmt.MesParam(r.Hasta < r.MesActual ? r.Hasta : r.MesActual)"><i class="bi bi-download"></i>Exportar CSV</a>
+    </div>
+</div>
+
+<section class="card-x filters-bar mb-4" aria-label="Filtros del reporte">
+    <div class="filter-group">
+        <span class="filter-label">Período</span>
+        <div class="segmented" role="group" aria-label="Período">
+            @foreach (var (val, txt) in new[] { ("6", "6 meses"), ("12", "12 meses"), ("anio", "Este año"), ("anio-anterior", "Año anterior") })
+            {
+                <a class="seg-link @(Model.Rango == val ? "active" : "")" aria-current="@(Model.Rango == val ? "true" : null)" asp-action="Index" asp-route-rango="@val" asp-route-vista="@vistaParam">@txt</a>
+            }
+        </div>
+    </div>
+    <form method="get" asp-action="Index" class="filter-group filter-custom">
+        <span class="filter-label">A medida</span>
+        <input type="hidden" name="vista" value="@vistaParam" />
+        <input type="month" name="desde" class="form-control form-control-sm" value="@Fmt.MesParam(r.Desde)" aria-label="Desde" />
+        <span class="text-muted-x">a</span>
+        <input type="month" name="hasta" class="form-control form-control-sm" value="@Fmt.MesParam(r.Hasta)" aria-label="Hasta" />
+        <button class="btn btn-light btn-sm" type="submit">Ver</button>
+    </form>
+    <div class="filter-group">
+        <span class="filter-label">Moneda</span>
+        <div class="segmented" role="group" aria-label="Moneda">
+            @foreach (var v in new[] { VistaMoneda.UYU, VistaMoneda.USD, VistaMoneda.Pesificado })
+            {
+                <a class="seg-link @(r.Vista == v ? "active" : "")" aria-current="@(r.Vista == v ? "true" : null)"
+                   asp-action="Index" asp-route-vista="@v" asp-route-rango="@(Model.Rango == "personalizado" ? null : Model.Rango)"
+                   asp-route-desde="@(Model.Rango == "personalizado" ? Fmt.MesParam(r.Desde) : null)" asp-route-hasta="@(Model.Rango == "personalizado" ? Fmt.MesParam(r.Hasta) : null)">@NombreVista(v)</a>
+            }
+        </div>
+    </div>
+</section>
+
+@if (r.Vista == VistaMoneda.Pesificado && r.MesesSinTipoCambio.Count > 0)
+{
+    <div class="alert-x err mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        <div>Faltan cotizaciones: los gastos en dólares de @string.Join(", ", r.MesesSinTipoCambio.Select(Fmt.MesAnio)) no se incluyen (no hay cotización del BCU disponible). <a asp-controller="TipoCambio" asp-action="Index">Ver tipo de cambio</a></div>
+    </div>
+}
+else if (r.Vista == VistaMoneda.Pesificado)
+{
+    <div class="info-note mb-4"><i class="bi bi-currency-exchange" aria-hidden="true"></i><span>Los dólares se convierten con el promedio mensual del BCU (o tu ajuste manual, si cargaste uno para ese mes). <a asp-controller="TipoCambio" asp-action="Index">Ver cotizaciones</a></span></div>
+}
+
+<section class="kpi-grid" aria-label="Resumen del período">
+    <article class="card-x kpi featured">
+        <div class="kpi-top"><span class="kpi-label">Total del período</span><span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Total, mon)</div>
+        <div class="kpi-meta">@periodo</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Promedio mensual</span><span class="kpi-icon accent"><i class="bi bi-bar-chart" aria-hidden="true"></i></span></div>
+        <div class="kpi-value">@Fmt.MoneyHtml(r.Promedio, mon)</div>
+        <div class="kpi-meta">@r.MesesConDatos mes(es) desde el primer gasto del período</div>
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Mes más alto</span><span class="kpi-icon accent"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></div>
+        @if (r.MesMaximo is SerieMes max)
+        {
+            <div class="kpi-value text">@Fmt.MesAnioCap(max.Mes)</div>
+            <div class="kpi-meta">@Fmt.Money(max.Total, mon)</div>
+        }
+        else
+        {
+            <div class="kpi-value text">—</div><div class="kpi-meta">Sin gastos</div>
+        }
+    </article>
+    <article class="card-x kpi">
+        <div class="kpi-top"><span class="kpi-label">Categoría principal</span><span class="kpi-icon accent"><i class="bi bi-tags" aria-hidden="true"></i></span></div>
+        @if (r.CategoriaPrincipal is TotalGrupo top)
+        {
+            <div class="kpi-value text">@top.Nombre</div>
+            <div class="kpi-meta">@Fmt.Money(top.Total, mon) · @Fmt.PctTexto(top.Total, r.Total)% del total</div>
+        }
+        else
+        {
+            <div class="kpi-value text">—</div><div class="kpi-meta">Sin gastos</div>
+        }
+    </article>
+</section>
+
+<section class="card-x mb-4" aria-labelledby="t-meses">
+    <div class="card-head">
+        <div>
+            <h2 id="t-meses">Gasto por mes</h2>
+            <div class="sub">@NombreVista(r.Vista) · por tipo@(Model.MesesFuturos > 0 ? $" · los últimos {Model.MesesFuturos} meses (más claros) son proyección: cuotas ya cargadas y gastos fijos previstos" : "")</div>
+        </div>
+    </div>
+    <div class="card-body-x">
+        <ul class="viz-legend" aria-hidden="true">
+            <li><span class="sw" style="background:var(--series-1)"></span>Contado</li>
+            <li><span class="sw" style="background:var(--series-2)"></span>Cuotas</li>
+            <li><span class="sw" style="background:var(--series-3)"></span>Fijos</li>
+            @if (Model.MesesFuturos > 0) { <li><span class="sw sw-proy"></span>Proyección (tono más claro)</li> }
+        </ul>
+        <div class="viz-box viz-tall">
+            <canvas id="chart-meses" data-chart="meses" data-datos="@datosMeses" role="img" aria-label="Gráfico de columnas apiladas del gasto por mes y por tipo. Los datos están en la tabla siguiente."></canvas>
+        </div>
+        <details class="viz-table">
+            <summary>Ver tabla de datos</summary>
+            <div class="table-wrap">
+                <table class="table-x">
+                    <thead><tr><th scope="col">Mes</th><th scope="col" class="amount">Contado</th><th scope="col" class="amount">Cuotas</th><th scope="col" class="amount">Fijos</th><th scope="col" class="amount">Total</th></tr></thead>
+                    <tbody>
+                        @foreach (var m in r.Meses)
+                        {
+                            <tr>
+                                <th scope="row" class="cell-nowrap">@Fmt.MesAnioCap(m.Mes)@if (m.Proyectado) { <span class="chip chip-unico ms-1">proyección</span> }</th>
+                                <td class="amount">@Fmt.Money(m.Contado, mon)</td>
+                                <td class="amount">@Fmt.Money(m.Cuotas, mon)</td>
+                                <td class="amount">@Fmt.Money(m.Fijos, mon)</td>
+                                <td class="amount"><strong>@Fmt.Money(m.Total, mon)</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+</section>
+
+<div class="grid-1-1 align-start">
+    <section class="card-x" aria-labelledby="t-cat">
+        <div class="card-head">
+            <div>
+                <h2 id="t-cat">Por categoría</h2>
+                <div class="sub">@periodo · @NombreVista(r.Vista)</div>
+            </div>
+        </div>
+        <div class="card-body-x">
+            @if (cats.Count == 0)
+            {
+                <div class="empty py-4"><div class="empty-icon"><i class="bi bi-pie-chart"></i></div><p>Sin gastos en el período.</p></div>
+            }
+            else
+            {
+                <div class="viz-box" style="height:@(Math.Max(160, cats.Count * 38 + 30))px">
+                    <canvas data-chart="barras" data-datos="@datosCat" role="img" aria-label="Gráfico de barras del gasto por categoría. Los datos están en la tabla siguiente."></canvas>
+                </div>
+                <details class="viz-table">
+                    <summary>Ver tabla de datos</summary>
+                    <table class="table-x">
+                        <thead><tr><th scope="col">Categoría</th><th scope="col" class="amount">Gastos</th><th scope="col" class="amount">Total</th><th scope="col" class="amount">%</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in r.PorCategoria)
+                            {
+                                <tr><th scope="row"><div class="cell-main">@Fmt.IconoGrupo(c.Icono, c.Color, "sm")@c.Nombre</div></th><td class="amount">@c.Cantidad</td><td class="amount">@Fmt.Money(c.Total, mon)</td><td class="amount">@Fmt.PctTexto(c.Total, r.Total)</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </details>
+            }
+        </div>
+    </section>
+
+    <section class="card-x" aria-labelledby="t-tar">
+        <div class="card-head">
+            <div>
+                <h2 id="t-tar">Por medio de pago</h2>
+                <div class="sub">@periodo · @NombreVista(r.Vista)</div>
+            </div>
+        </div>
+        <div class="card-body-x">
+            @if (r.PorTarjeta.Count == 0)
+            {
+                <div class="empty py-4"><div class="empty-icon"><i class="bi bi-credit-card"></i></div><p>Sin gastos en el período.</p></div>
+            }
+            else
+            {
+                <div class="viz-box" style="height:@(Math.Max(140, Math.Min(8, r.PorTarjeta.Count) * 44 + 30))px">
+                    <canvas data-chart="barras" data-datos="@datosTar" role="img" aria-label="Gráfico de barras del gasto por medio de pago. Los datos están en la tabla siguiente."></canvas>
+                </div>
+                <details class="viz-table">
+                    <summary>Ver tabla de datos</summary>
+                    <table class="table-x">
+                        <thead><tr><th scope="col">Medio de pago</th><th scope="col" class="amount">Gastos</th><th scope="col" class="amount">Total</th><th scope="col" class="amount">%</th></tr></thead>
+                        <tbody>
+                            @foreach (var t in r.PorTarjeta)
+                            {
+                                <tr><th scope="row"><div class="cell-main">@Fmt.Punto(t.Color)@t.Nombre</div></th><td class="amount">@t.Cantidad</td><td class="amount">@Fmt.Money(t.Total, mon)</td><td class="amount">@Fmt.PctTexto(t.Total, r.Total)</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </details>
+            }
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+            integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4"
+            crossorigin="anonymous"></script>
+    <script src="~/js/reportes.js" asp-append-version="true"></script>
+}
