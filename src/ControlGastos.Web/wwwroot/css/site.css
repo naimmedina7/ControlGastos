@@ -686,23 +686,45 @@ small, .small { font-size: max(.875em, 12px); }
 .auth-features { list-style: none; padding: 0; margin: 0 0 36px; display: grid; gap: 12px; }
 .auth-features li { display: flex; gap: 12px; align-items: center; color: var(--ink-text); font-size: .93rem; }
 .auth-features li i { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--ink-2); color: var(--mint); flex: none; }
-.preview-card { background: var(--ink-2); border: 1px solid var(--ink-line); border-radius: var(--r-card); padding: 18px 20px; max-width: 460px; }
-.preview-card .pc-head { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; color: var(--ink-text); }
-.pc-bars { display: flex; align-items: flex-end; gap: 8px; height: 70px; margin-top: 14px; }
-.pc-bars div { flex: 1; border-radius: var(--r-pill) var(--r-pill) 4px 4px; background: var(--ink-3); }
-.pc-bars div.on { background: var(--amber); }
-.pc-rows { margin-top: 14px; display: grid; gap: 8px; }
-.pc-row { display: flex; align-items: center; gap: 10px; font-size: .85rem; color: var(--ink-text); }
-.pc-row .dot { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--ink-3); color: var(--mint); font-size: .85rem; }
-.pc-row .grow { flex: 1; }
-.pc-row .tag { font-size: .8rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill); background: rgba(251, 191, 36, .14); color: var(--amber); }
+/* Tarjeta de ejemplo (importes inventados): entra una vez y sus barras crecen; nada más se mueve. */
+.hero-card { max-width: 440px; padding: 20px 22px; border-radius: var(--r-card); background: var(--ink-2); border: 1px solid var(--ink-line); animation: entrar .7s cubic-bezier(.2, .7, .2, 1) .1s both; }
+@keyframes entrar { from { opacity: 0; transform: translateY(14px); } }
+.hc-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: .82rem; color: var(--ink-text); }
+.hc-chip { font-size: .8rem; font-weight: 600; padding: 3px 9px; border-radius: var(--r-pill); background: var(--ink-3); color: var(--ink-text); }
+.hc-total { margin-top: 6px; font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; letter-spacing: -.035em; line-height: 1.1; color: var(--ink-strong); font-variant-numeric: tabular-nums; }
+.hc-total .cur { font-size: .55em; color: var(--mint); margin-right: 4px; vertical-align: .36em; }
+.hc-escalera { display: flex; align-items: flex-end; gap: 8px; height: 76px; margin-top: 14px; }
+.hc-escalera span { flex: 1; border-radius: var(--r-pill) var(--r-pill) 4px 4px; background: var(--ink-3); transform-origin: bottom; animation: crecer .6s cubic-bezier(.2, .7, .2, 1) both; }
+.hc-escalera span:first-child { background: var(--amber); }
+.hc-escalera span:nth-child(1) { animation-delay: .35s; }
+.hc-escalera span:nth-child(2) { animation-delay: .4s; }
+.hc-escalera span:nth-child(3) { animation-delay: .45s; }
+.hc-escalera span:nth-child(4) { animation-delay: .5s; }
+.hc-escalera span:nth-child(5) { animation-delay: .55s; }
+.hc-escalera span:nth-child(6) { animation-delay: .6s; }
+.hc-filas { display: grid; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ink-line); }
+.hc-fila { display: flex; align-items: center; gap: 10px; font-size: .87rem; color: var(--ink-text); }
+.hc-icono { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 9px; background: var(--ink-3); color: var(--mint); font-size: .85rem; }
+.hc-nombre { flex: 1; min-width: 0; }
+.hero-card .cuotas-avance i { background: var(--ink-3); }
+.hero-card .cuotas-avance i.on { background: var(--amber); }
+.hc-tag { font-size: .8rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill); background: rgba(251, 191, 36, .14); color: var(--amber); font-variant-numeric: tabular-nums; }
 .auth-foot { font-size: .82rem; color: var(--ink-label); }
 .auth-form-side { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px 32px; background: var(--surface); }
 .auth-form { width: 100%; max-width: 400px; }
 .auth-form h2 { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; margin: 0 0 6px; }
 .auth-form .lead-x { color: var(--text-2); margin: 0 0 28px; font-size: .95rem; }
 .auth-switch { margin: 22px 0 0; text-align: center; color: var(--text-2); font-size: .92rem; }
-.auth-mobile-logo { display: none; }
+/* Requisitos de la contraseña (registro): se marcan en verde a medida que se cumplen. */
+.requisitos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: .85rem; color: var(--text-2); }
+.requisitos li { display: flex; align-items: center; gap: 8px; }
+.requisitos li i { color: var(--muted); font-size: .9rem; }
+.requisitos li.ok { color: var(--accent); }
+.requisitos li.ok i { color: var(--accent); }
+/* "¿Olvidaste tu contraseña?": solo texto (no hay recuperación por correo). */
+.olvido summary { cursor: pointer; width: fit-content; font-size: .9rem; font-weight: 600; color: var(--accent); }
+.olvido summary:hover { color: var(--accent-strong); }
+.olvido p { margin: 8px 0 0; padding: 12px 14px; border-radius: var(--r-ctrl); background: var(--surface-2); border: 1px solid var(--border); font-size: .87rem; color: var(--text-2); }
 
 /* =========================================================================
    Responsive
@@ -725,11 +747,13 @@ small, .small { font-size: max(.875em, 12px); }
   .topbar .btn-new { display: none; }       /* un solo "+": el flotante */
   .content { padding: 20px 16px 96px; }
   .fab { display: grid; }
-  .auth { grid-template-columns: 1fr; }
-  .auth-brand { display: none; }
-  .auth-mobile-logo { display: flex; margin-bottom: 28px; color: var(--text); }
-  .auth-mobile-logo .brand-name .light { color: var(--text-2); }
-  .auth-mobile-logo .brand-name .dot { color: var(--accent); }
+  .auth { grid-template-columns: 1fr; align-content: start; }
+  .auth-brand { padding: 22px 20px 26px; }
+  .auth-hero { margin: 0; padding: 20px 0 0; max-width: 560px; }
+  .auth-hero h1 { font-size: 2rem; margin-bottom: 8px; }
+  .auth-hero p { font-size: .95rem; margin: 0; }
+  .auth-hero .pill, .auth-features, .hero-card, .auth-foot { display: none; }
+  .auth-form-side { justify-content: flex-start; padding: 28px 20px 40px; }
   .grid-1-1 { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
@@ -809,7 +833,9 @@ small, .small { font-size: max(.875em, 12px); }
   .month-nav a.step { width: 44px; }
   .segmented button, .segmented .seg-link { min-height: 40px; }
   .flash .flash-close { width: 44px; height: 44px; }
-  .viz-table summary, .restore-box summary, .filtros-mas > summary { min-height: 44px; display: flex; align-items: center; }
+  .viz-table summary, .restore-box summary, .filtros-mas > summary, .olvido summary { min-height: 44px; display: flex; align-items: center; }
+  .auth-switch a { display: inline-flex; align-items: center; min-height: 44px; }
+  .input-icon .toggle-pass { width: 44px; height: 44px; right: 2px; }
   .dropdown-item { min-height: 44px; }
   .page-head .eyebrow a { display: inline-flex; align-items: center; min-height: 44px; margin: -14px 0; }
   .kpi-meta a, .card-head .link-arrow { display: inline-flex; align-items: center; min-height: 44px; margin: -12px 0; }

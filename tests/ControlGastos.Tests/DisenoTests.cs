@@ -169,4 +169,56 @@ public class DisenoTests(AppFactory factory) : IClassFixture<AppFactory>
         Assert.Contains("class=\"escalera\"", lleno);
         Assert.Contains("En cuotas", lleno);                    // desglose del total en pesos
     }
+
+    // ---------- Fase 4 ----------
+
+    [Fact]
+    public async Task La_portada_es_el_inicio_de_sesion_y_entra_por_cuenta_login()
+    {
+        var c = factory.Cliente();
+        string html = await c.GetStringAsync("/");
+        Assert.Contains("<title>Mis·Gastos · Control de gastos personales</title>", html);
+        Assert.Contains("action=\"/cuenta/login\"", html);
+        Assert.Contains("href=\"/cuenta/registro\"", html);
+        Assert.DoesNotContain("Bienvenido", html);
+
+        // El formulario de la portada inicia sesión de verdad (mismo token y misma acción que /cuenta/login).
+        string email = $"p{Guid.NewGuid():N}@test.local";
+        await PostFormAsync(c, "/cuenta/registro", "/cuenta/registro", new() { ["Nombre"] = "Portada", ["Email"] = email, ["Password"] = "clave1234", ["ConfirmarPassword"] = "clave1234" });
+        var otro = factory.Cliente();
+        var r = await PostFormAsync(otro, "/", "/cuenta/login", new() { ["Email"] = email, ["Password"] = "clave1234" });
+        Assert.Equal(HttpStatusCode.Redirect, r.StatusCode);
+        Assert.Equal("/panel", r.Headers.Location!.OriginalString);
+    }
+
+    [Fact]
+    public async Task El_login_explica_que_hacer_si_olvidaste_la_contrasena()
+    {
+        string html = await factory.Cliente().GetStringAsync("/cuenta/login");
+        string olvido = Regex.Match(html, "<details class=\"olvido[\\s\\S]*?</details>").Value;
+        Assert.Contains("¿Olvidaste tu contraseña?", olvido);
+        Assert.Contains("contraseña temporal", olvido);
+        Assert.DoesNotContain("href", olvido); // solo texto: no hay recuperación por correo
+    }
+
+    [Fact]
+    public async Task La_tarjeta_de_ejemplo_usa_importes_inventados()
+    {
+        string html = await factory.Cliente().GetStringAsync("/cuenta/login");
+        string tarjeta = Regex.Match(html, "<div class=\"hero-card\"[\\s\\S]*?<div class=\"auth-foot\"").Value;
+        Assert.Contains("18.320", tarjeta);
+        Assert.Contains("Heladera", tarjeta);
+        Assert.Contains("aria-hidden=\"true\"", tarjeta);
+    }
+
+    [Fact]
+    public async Task El_registro_muestra_los_requisitos_de_la_contrasena()
+    {
+        string html = await factory.Cliente().GetStringAsync("/cuenta/registro");
+        Assert.Contains("aria-describedby=\"requisitos-pass\"", html);
+        foreach (var regla in new[] { "largo", "minuscula", "numero" })
+            Assert.Contains($"data-regla=\"{regla}\"", html);
+        string js = await factory.Cliente().GetStringAsync("/js/site.js");
+        Assert.Contains("v.length >= 8", js); // mismas reglas que Identity (Program.cs)
+    }
 }

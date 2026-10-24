@@ -34,6 +34,27 @@
     });
   });
 
+  // Registro: requisitos de la contraseña que se marcan mientras se escribe (mismas reglas que Identity en Program.cs).
+  var REGLAS = {
+    largo: function (v) { return v.length >= 8; },
+    minuscula: function (v) { return /\p{Ll}/u.test(v); },
+    numero: function (v) { return /\p{Nd}/u.test(v); },
+  };
+  document.querySelectorAll("[data-requisitos]").forEach(function (lista) {
+    var input = document.getElementById(lista.dataset.requisitos);
+    if (!input) return;
+    function revisar() {
+      lista.querySelectorAll("[data-regla]").forEach(function (li) {
+        var ok = REGLAS[li.dataset.regla](input.value);
+        li.classList.toggle("ok", ok);
+        li.querySelector("i").className = "bi " + (ok ? "bi-check-circle-fill" : "bi-circle");
+        li.querySelector("[data-estado]").textContent = ok ? " (cumplido)" : " (pendiente)";
+      });
+    }
+    input.addEventListener("input", revisar);
+    revisar();
+  });
+
   // Confirmación antes de acciones destructivas: <form data-confirm="¿Seguro?">
   document.querySelectorAll("form[data-confirm]").forEach(function (f) {
     f.addEventListener("submit", function (e) {

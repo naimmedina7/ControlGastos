@@ -9,11 +9,6 @@
 
     <section class="auth-form-side">
         <div class="auth-form">
-            <div class="auth-mobile-logo align-items-center gap-2">
-                <partial name="_Logo" />
-                <span class="brand-name">Mis<span class="dot">·</span><span class="light">Gastos</span></span>
-            </div>
-
             <h2>Crear cuenta</h2>
             <p class="lead-x">Tus gastos quedan en tu cuenta y nadie más los puede ver.</p>
 
@@ -40,10 +35,15 @@
                     <label asp-for="Password" class="form-label">Contraseña</label>
                     <div class="input-icon">
                         <i class="bi bi-lock" aria-hidden="true"></i>
-                        <input asp-for="Password" class="form-control" autocomplete="new-password" required minlength="8" style="padding-right:44px" />
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" required minlength="8" style="padding-right:44px" aria-describedby="requisitos-pass" />
                         <button type="button" class="toggle-pass" aria-label="Mostrar contraseña" data-toggle-pass><i class="bi bi-eye"></i></button>
                     </div>
-                    <div class="form-hint">Al menos 8 caracteres, con una letra minúscula y un número.</div>
+                    @* Se van marcando mientras escribes (site.js); son las mismas reglas que valida el servidor. *@
+                    <ul class="requisitos" id="requisitos-pass" data-requisitos="Password" aria-label="Requisitos de la contraseña">
+                        <li data-regla="largo"><i class="bi bi-circle" aria-hidden="true"></i>Al menos 8 caracteres<span class="visually-hidden" data-estado></span></li>
+                        <li data-regla="minuscula"><i class="bi bi-circle" aria-hidden="true"></i>Una letra minúscula<span class="visually-hidden" data-estado></span></li>
+                        <li data-regla="numero"><i class="bi bi-circle" aria-hidden="true"></i>Un número<span class="visually-hidden" data-estado></span></li>
+                    </ul>
                     <span asp-validation-for="Password" class="field-error"></span>
                 </div>
                 <div class="mb-4">
