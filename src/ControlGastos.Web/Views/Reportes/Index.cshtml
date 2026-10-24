@@ -49,14 +49,6 @@
             }
         </div>
     </div>
-    <form method="get" asp-action="Index" class="filter-group filter-custom">
-        <span class="filter-label">A medida</span>
-        <input type="hidden" name="vista" value="@vistaParam" />
-        <input type="month" name="desde" class="form-control form-control-sm" value="@Fmt.MesParam(r.Desde)" aria-label="Desde" />
-        <span class="text-muted-x">a</span>
-        <input type="month" name="hasta" class="form-control form-control-sm" value="@Fmt.MesParam(r.Hasta)" aria-label="Hasta" />
-        <button class="btn btn-light btn-sm" type="submit">Ver</button>
-    </form>
     <div class="filter-group">
         <span class="filter-label">Moneda</span>
         <div class="segmented" role="group" aria-label="Moneda">
@@ -68,6 +60,20 @@
             }
         </div>
     </div>
+    @* Rango a medida: plegado para que se vean primero los datos. Abierto si ya hay uno aplicado. *@
+    <details class="filtros-mas" @(Model.Rango == "personalizado" ? "open" : "")>
+        <summary><i class="bi bi-sliders" aria-hidden="true"></i><span>Filtros</span>
+            @if (Model.Rango == "personalizado") { <span class="chip chip-ok ms-1">a medida</span> }
+        </summary>
+        <form method="get" asp-action="Index" class="filter-group filter-custom">
+            <span class="filter-label">Rango a medida</span>
+            <input type="hidden" name="vista" value="@vistaParam" />
+            <input type="month" name="desde" class="form-control form-control-sm" value="@Fmt.MesParam(r.Desde)" aria-label="Desde" />
+            <span class="text-muted-x">a</span>
+            <input type="month" name="hasta" class="form-control form-control-sm" value="@Fmt.MesParam(r.Hasta)" aria-label="Hasta" />
+            <button class="btn btn-light btn-sm" type="submit">Ver</button>
+        </form>
+    </details>
 </section>
 
 @if (r.Vista == VistaMoneda.Pesificado && r.MesesSinTipoCambio.Count > 0)

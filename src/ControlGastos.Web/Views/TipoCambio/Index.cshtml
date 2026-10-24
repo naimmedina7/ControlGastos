@@ -40,7 +40,7 @@
             </div>
         </div>
         <div class="table-wrap mt-2">
-            <table class="table-x">
+            <table class="table-x table-apilada">
                 <thead>
                     <tr>
                         <th scope="col">Mes</th>
@@ -58,9 +58,9 @@
                                 @Fmt.MesAnioCap(f.Mes)
                                 @if (f.EsMesActual && f.Bcu != null && !f.Bcu.Definitiva) { <span class="chip chip-unico ms-1">parcial</span> }
                             </th>
-                            <td class="amount text-2">@Valor(f.Bcu?.UsdEnPesos)</td>
-                            <td class="amount">@Valor(f.Manual?.UsdEnPesos)</td>
-                            <td class="amount">
+                            <td class="amount text-2" data-label="BCU">@Valor(f.Bcu?.UsdEnPesos)</td>
+                            <td class="amount" data-label="Ajuste manual">@Valor(f.Manual?.UsdEnPesos)</td>
+                            <td class="amount" data-label="Se usa">
                                 <strong>@Valor(f.Usado)</strong>
                                 @if (f.Manual == null && f.Bcu == null && f.Usado != null) { <div class="cell-sub">del mes anterior</div> }
                             </td>
