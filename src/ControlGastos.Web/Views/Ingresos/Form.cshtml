@@ -1,0 +1,79 @@
+@model IngresoFormVm
+@{
+    bool editando = Model.Id.HasValue;
+    ViewData["Title"] = editando ? "Editar ingreso" : "Nuevo ingreso";
+    ViewData["Section"] = "General";
+    ViewData["OcultarFab"] = true;
+    string accion = editando ? "Editar" : "Nuevo";
+    var tipos = new[]
+    {
+        (TipoIngreso.Sueldo, "Tu sueldo o jornales"),
+        (TipoIngreso.Venta, "Algo que vendiste"),
+        (TipoIngreso.PrestamoDevuelto, "Plata que prestaste y te devolvieron"),
+        (TipoIngreso.Otro, "Cualquier otra entrada"),
+    };
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow"><a asp-action="Index" asp-route-mes="@Fmt.MesParam(Model.Fecha)" class="text-reset"><i class="bi bi-arrow-left"></i> Ingresos</a></span>
+        <h1>@ViewData["Title"]</h1>
+        <p class="hide-sm">Cuenta en el mes de la fecha que elijas.</p>
+    </div>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
+
+<form method="post" asp-action="@accion" asp-route-id="@Model.Id" data-validate novalidate class="form-narrow">
+    <div class="card-x">
+        <div class="form-section">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Monto" class="form-label">Monto</label>
+                    <div class="input-group input-group-lg">
+                        <select asp-for="Moneda" class="form-select money-cur" aria-label="Moneda">
+                            <option value="UYU">$ UYU</option>
+                            <option value="USD">US$ USD</option>
+                        </select>
+                        <input asp-for="Monto" class="form-control" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required autofocus
+                               value="@(Model.Monto > 0 ? Model.Monto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "")" />
+                    </div>
+                    <span asp-validation-for="Monto" class="field-error"></span>
+                </div>
+                <div class="col-md-7">
+                    <label asp-for="Descripcion" class="form-label">Descripción</label>
+                    <input asp-for="Descripcion" class="form-control" maxlength="120" placeholder="Ej.: Sueldo de octubre" required />
+                    <span asp-validation-for="Descripcion" class="field-error"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Fecha" class="form-label">Fecha</label>
+                    <input asp-for="Fecha" class="form-control" type="date" required />
+                    <span asp-validation-for="Fecha" class="field-error"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="form-section-title">Tipo de ingreso</h2>
+            <div class="method-options two" role="radiogroup" aria-label="Tipo de ingreso">
+                @foreach (var (tipo, ayuda) in tipos)
+                {
+                    <div class="method-option">
+                        <input type="radio" name="Tipo" id="tipo-@tipo" value="@tipo" checked="@(Model.Tipo == tipo)" />
+                        <label for="tipo-@tipo"><i class="bi @Fmt.Icono(tipo)" aria-hidden="true"></i><strong>@Fmt.Tipo(tipo)</strong><span>@ayuda</span></label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="form-section">
+            <label asp-for="Notas" class="form-label">Notas <span class="text-muted-x">(opcional)</span></label>
+            <textarea asp-for="Notas" class="form-control" rows="2" maxlength="500" placeholder="Ej.: a quién le prestaste"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-ghost" asp-action="Index" asp-route-mes="@Fmt.MesParam(Model.Fecha)">Cancelar</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i>@(editando ? "Guardar cambios" : "Guardar ingreso")</button>
+        </div>
+    </div>
+</form>

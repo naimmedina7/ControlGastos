@@ -11,6 +11,10 @@
     var categorias = r.Lineas.Select(l => l.Gasto.Categoria).DistinctBy(c => c?.Id).OrderBy(c => c?.Nombre ?? "~").ToList();
     var inv = System.Globalization.CultureInfo.InvariantCulture;
     string Kind(Gasto g) => g.EsFijo ? "fijo" : g.EnCuotas ? "cuotas" : "contado";
+    // Una dona por moneda con gastos: pesos y dólares no se suman.
+    var donas = new[] { Moneda.UYU, Moneda.USD }
+        .Select(m => DonaVm.Crear(r.PorCategoria.Where(c => c.Moneda == m).Select(c => new PorcionDona(c.Nombre, c.Color, c.Total)), m))
+        .Where(d => d.Porciones.Count > 0).ToList();
 }
 
 <div class="page-head">
@@ -43,6 +47,28 @@
         <div class="kpi-meta">@if (r.Pendiente(Moneda.USD) > 0) { <span>+ @Fmt.Money(r.Pendiente(Moneda.USD), Moneda.USD) ·</span> } <a asp-action="Cuotas">Ver cuotas pendientes</a></div>
     </article>
 </section>
+
+@if (donas.Count > 0)
+{
+    <section class="card-x mb-4" aria-labelledby="dona-title">
+        <div class="card-head">
+            <div>
+                <h2 id="dona-title">En qué se te va</h2>
+                <div class="sub">Por categoría · @Fmt.MesAnioCap(Model.Mes)@(donas.Count > 1 ? " · pesos y dólares por separado" : "")</div>
+            </div>
+            <a class="link-arrow" asp-controller="Reportes" asp-action="Index">Reportes <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="card-body-x @(donas.Count > 1 ? "donas-2" : "")">
+            @foreach (var d in donas)
+            {
+                <div>
+                    @if (donas.Count > 1) { <div class="group-label">@(d.Moneda == Moneda.USD ? "En dólares" : "En pesos")</div> }
+                    <partial name="_Dona" model="d" />
+                </div>
+            }
+        </div>
+    </section>
+}
 
 @if (Model.Previstos.Count > 0)
 {

@@ -54,6 +54,22 @@ public static class Fmt
 
     public static string Tipo(TipoTarjeta t) => t == TipoTarjeta.Credito ? "Crédito" : "Débito";
 
+    public static string Tipo(TipoIngreso t) => t switch
+    {
+        TipoIngreso.Sueldo => "Sueldo",
+        TipoIngreso.Venta => "Venta",
+        TipoIngreso.PrestamoDevuelto => "Préstamo devuelto",
+        _ => "Otro ingreso",
+    };
+
+    public static string Icono(TipoIngreso t) => t switch
+    {
+        TipoIngreso.Sueldo => "bi-briefcase",
+        TipoIngreso.Venta => "bi-bag-check",
+        TipoIngreso.PrestamoDevuelto => "bi-arrow-left-right",
+        _ => "bi-plus-circle",
+    };
+
     public static IHtmlContent TipoBadge(Tarjeta? t)
     {
         if (t == null) return new HtmlString("<span class=\"chip chip-efectivo\"><i class=\"bi bi-cash-stack\" aria-hidden=\"true\"></i>Efectivo</span>");

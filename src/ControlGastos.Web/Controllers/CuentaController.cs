@@ -179,7 +179,7 @@ public class CuentaController(
             await using (var stream = archivo!.OpenReadStream()) r = RespaldoService.Leer(stream);
             var res = await respaldos.RestaurarAsync(r);
             logger.LogInformation("Respaldo restaurado por {UserId}: {Gastos} gastos", user.Id, res.Gastos);
-            TempData["Ok"] = $"Respaldo restaurado: {res.Gastos} gastos, {res.GastosFijos} gastos fijos, {res.Tarjetas} tarjetas y {res.Categorias} categorías.";
+            TempData["Ok"] = $"Respaldo restaurado: {res.Gastos} gastos, {res.GastosFijos} gastos fijos, {res.Ingresos} ingresos, {res.Tarjetas} tarjetas y {res.Categorias} categorías.";
         }
         catch (ValidacionException ex)
         {

@@ -31,6 +31,7 @@ public abstract class AppDbContext : IdentityDbContext<AppUser>, IDataProtection
     public DbSet<GastoRecurrente> GastosRecurrentes => Set<GastoRecurrente>();
     public DbSet<TipoCambio> TiposCambio => Set<TipoCambio>();
     public DbSet<Presupuesto> Presupuestos => Set<Presupuesto>();
+    public DbSet<Ingreso> Ingresos => Set<Ingreso>();
     /// <summary>Datos públicos compartidos (sin filtro por usuario).</summary>
     public DbSet<CotizacionBcu> CotizacionesBcu => Set<CotizacionBcu>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
@@ -150,6 +151,18 @@ public abstract class AppDbContext : IdentityDbContext<AppUser>, IDataProtection
             // Si se borra la categoría, su presupuesto deja de tener sentido.
             e.HasOne(p => p.Categoria).WithMany().HasForeignKey(p => p.CategoriaId).OnDelete(DeleteBehavior.Cascade);
             e.HasQueryFilter(p => p.UserId == UsuarioActualId);
+        });
+
+        b.Entity<Ingreso>(e =>
+        {
+            e.Property(i => i.Descripcion).HasMaxLength(120).IsRequired();
+            e.Property(i => i.Notas).HasMaxLength(500);
+            e.Property(i => i.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.Property(i => i.Moneda).HasConversion<string>().HasMaxLength(3);
+            e.Property(i => i.Monto).HasPrecision(14, 2);
+            e.HasIndex(i => new { i.UserId, i.Fecha });
+            e.HasOne<AppUser>().WithMany().HasForeignKey(i => i.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasQueryFilter(i => i.UserId == UsuarioActualId);
         });
     }
 

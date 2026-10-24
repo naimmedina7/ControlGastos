@@ -110,6 +110,7 @@ builder.Services.AddScoped<ImportacionService>();
 builder.Services.AddScoped<ReporteService>();
 builder.Services.AddScoped<PresupuestoService>();
 builder.Services.AddScoped<RespaldoService>();
+builder.Services.AddScoped<IngresoService>();
 // Cotización del dólar (BCU vía Frankfurter): gratuita, sin clave; con timeout corto para no trabar la página.
 builder.Services.AddHttpClient<CotizacionService>(c =>
 {

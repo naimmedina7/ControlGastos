@@ -1,0 +1,50 @@
+@model DonaVm
+@*
+    Gráfica circular (dona) de en qué se va la plata, dibujada en SVG en el servidor: no depende de Chart.js.
+    Cada porción es un arco de un círculo (stroke-dasharray) con 2 px de aire entre porciones.
+    La leyenda es la versión accesible (color, nombre, % y monto); el SVG es decorativo.
+    Al pasar el mouse (o tocar) una porción, site.js muestra qué categoría es: sirve si dos categorías comparten color.
+*@
+@{
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    const double R = 80;
+    double circ = 2 * Math.PI * R;
+    double aire = Model.Porciones.Count > 1 ? 2.2 : 0;   // en unidades del viewBox (≈ 2 px a 180 px de ancho)
+    decimal total = Model.Total;
+    double inicio = 0;
+    string N(double v) => v.ToString("0.###", inv);
+}
+<div class="dona" data-dona>
+    <div class="dona-grafico">
+        <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+            <circle class="dona-pista" cx="100" cy="100" r="80" />
+            @for (int i = 0; i < Model.Porciones.Count; i++)
+            {
+                var p = Model.Porciones[i];
+                double frac = total > 0 ? (double)(p.Total / total) : 0;
+                double largo = Math.Max(frac * circ - aire, 0.6);
+                <circle class="dona-porcion" cx="100" cy="100" r="80" transform="rotate(-90 100 100)"
+                        stroke="@Fmt.ColorSeguro(p.Color)" stroke-dasharray="@N(largo) @N(circ - largo)" stroke-dashoffset="@N(-inicio)"
+                        data-i="@i" data-nombre="@p.Nombre" data-pct="@Fmt.PctTexto(p.Total, total)" data-monto="@Fmt.Money(p.Total, Model.Moneda)" />
+                inicio += frac * circ;
+            }
+        </svg>
+        <div class="dona-centro" aria-hidden="true">
+            <span class="dona-total">@Fmt.MoneyShort(total, Model.Moneda)</span>
+            <span class="dona-sub">@Model.Categorias @(Model.Categorias == 1 ? "categoría" : "categorías")</span>
+        </div>
+        <div class="dona-tip" hidden></div>
+    </div>
+    <ul class="dona-leyenda" aria-label="Gasto por categoría en @(Model.Moneda == Moneda.USD ? "dólares" : "pesos")">
+        @for (int i = 0; i < Model.Porciones.Count; i++)
+        {
+            var p = Model.Porciones[i];
+            <li data-i="@i">
+                <span class="dona-sw" style="background:@Fmt.ColorSeguro(p.Color)" aria-hidden="true"></span>
+                <span class="dona-nombre">@p.Nombre</span>
+                <span class="dona-pct">@Fmt.PctTexto(p.Total, total) %</span>
+                <span class="dona-monto">@Fmt.Money(p.Total, Model.Moneda)</span>
+            </li>
+        }
+    </ul>
+</div>
