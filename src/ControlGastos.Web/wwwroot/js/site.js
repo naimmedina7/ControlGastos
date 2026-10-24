@@ -55,6 +55,50 @@
     revisar();
   });
 
+  // Gráfica circular por categoría: al pasar el mouse (o tocar) una porción se resalta y se ve qué categoría es.
+  // Pasar por una fila de la leyenda resalta su porción.
+  var donas = document.querySelectorAll("[data-dona]");
+  donas.forEach(function (dona) {
+    var grafico = dona.querySelector(".dona-grafico");
+    var tip = dona.querySelector(".dona-tip");
+    function resaltar(i) {
+      dona.classList.toggle("resaltando", i != null);
+      dona.querySelectorAll("[data-i]").forEach(function (el) { el.classList.toggle("on", el.dataset.i === i); });
+    }
+    function mostrar(p, x, y) {
+      var nombre = document.createElement("strong");
+      nombre.textContent = p.dataset.nombre;
+      var dato = document.createElement("span");
+      dato.textContent = p.dataset.pct + " % · " + p.dataset.monto;
+      tip.replaceChildren(nombre, dato);
+      tip.hidden = false;
+      // Centrado sobre el puntero, sin salirse de la pantalla.
+      var r = grafico.getBoundingClientRect();
+      var medio = tip.offsetWidth / 2;
+      var cx = Math.min(Math.max(x, medio + 8), window.innerWidth - medio - 8);
+      tip.style.left = (cx - r.left) + "px";
+      tip.style.top = (y - r.top) + "px";
+    }
+    dona.ocultar = function () { tip.hidden = true; resaltar(null); };
+    dona.querySelectorAll(".dona-porcion").forEach(function (p) {
+      function activar(e) { resaltar(p.dataset.i); mostrar(p, e.clientX, e.clientY); }
+      p.addEventListener("pointermove", activar);
+      p.addEventListener("pointerdown", activar);
+      p.addEventListener("pointerleave", function (e) { if (e.pointerType !== "touch") dona.ocultar(); });
+    });
+    dona.querySelectorAll(".dona-leyenda li").forEach(function (li) {
+      li.addEventListener("pointerenter", function () { resaltar(li.dataset.i); });
+      li.addEventListener("pointerleave", function () { resaltar(null); });
+    });
+  });
+  // En pantallas táctiles el tooltip queda hasta tocar fuera de la gráfica.
+  if (donas.length) {
+    document.addEventListener("pointerdown", function (e) {
+      if (e.target.closest && e.target.closest(".dona-porcion")) return;
+      donas.forEach(function (d) { d.ocultar(); });
+    });
+  }
+
   // Confirmación antes de acciones destructivas: <form data-confirm="¿Seguro?">
   document.querySelectorAll("form[data-confirm]").forEach(function (f) {
     f.addEventListener("submit", function (e) {

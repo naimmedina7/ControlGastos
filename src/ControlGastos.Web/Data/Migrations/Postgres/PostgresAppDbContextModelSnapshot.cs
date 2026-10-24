@@ -321,6 +321,54 @@ namespace ControlGastos.Web.Data.Migrations.Postgres
                     b.ToTable("GastosRecurrentes", (string)null);
                 });
 
+            modelBuilder.Entity("ControlGastos.Web.Domain.Ingreso", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
+
+                    b.Property<string>("Notas")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Fecha");
+
+                    b.ToTable("Ingresos");
+                });
+
             modelBuilder.Entity("ControlGastos.Web.Domain.Presupuesto", b =>
                 {
                     b.Property<int>("Id")
@@ -657,6 +705,15 @@ namespace ControlGastos.Web.Data.Migrations.Postgres
                     b.Navigation("Categoria");
 
                     b.Navigation("Tarjeta");
+                });
+
+            modelBuilder.Entity("ControlGastos.Web.Domain.Ingreso", b =>
+                {
+                    b.HasOne("ControlGastos.Web.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ControlGastos.Web.Domain.Presupuesto", b =>

@@ -159,6 +159,25 @@ public class GastoRecurrente : IPerteneceAUsuario
         new(mes.Year, mes.Month, Math.Min(DiaDelMes, DateTime.DaysInMonth(mes.Year, mes.Month)));
 }
 
+public enum TipoIngreso { Sueldo = 1, Venta = 2, PrestamoDevuelto = 3, Otro = 4 }
+
+/// <summary>
+/// Plata que entra: sueldo, una venta, un préstamo que te devolvieron. Cuenta en el mes de su fecha
+/// y, restado de los gastos de ese mes, dice cuánto te queda.
+/// </summary>
+public class Ingreso : IPerteneceAUsuario
+{
+    public int Id { get; set; }
+    public string UserId { get; set; } = "";
+    public string Descripcion { get; set; } = "";
+    public TipoIngreso Tipo { get; set; } = TipoIngreso.Sueldo;
+    public DateOnly Fecha { get; set; }
+    public Moneda Moneda { get; set; } = Moneda.UYU;
+    public decimal Monto { get; set; }
+    public string? Notas { get; set; }
+    public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+}
+
 /// <summary>Cotización del dólar (en pesos) que el usuario usa para un mes. Sirve para ver todo "pesificado".</summary>
 public class TipoCambio : IPerteneceAUsuario
 {

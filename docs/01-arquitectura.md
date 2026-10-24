@@ -15,7 +15,7 @@
 ```
 src/ControlGastos.Web/
 ├── Domain/            Entidades y reglas puras (sin EF ni HTTP)
-│   ├── Entidades.cs           AppUser, Tarjeta, Categoria, Gasto, Cuota, GastoRecurrente, enums
+│   ├── Entidades.cs           AppUser, Tarjeta, Categoria, Gasto, Cuota, GastoRecurrente, Ingreso, enums
 │   ├── PlanDeCuotas.cs        Períodos, mes de facturación (día de cierre) y generación de cuotas
 │   ├── EstadoDeCuenta.cs      Parser del texto del estado de cuenta, normalización de comercios, reglas de categoría
 │   └── CategoriasPorDefecto.cs
@@ -32,6 +32,7 @@ src/ControlGastos.Web/
 │   ├── ImportacionService.cs  Análisis (sugerencias, duplicados) e importación en una transacción
 │   ├── PresupuestoService.cs  Presupuestos por categoría y su avance en el mes
 │   ├── CotizacionService.cs   Cotización mensual del BCU (Frankfurter), guardada en la base
+│   ├── IngresoService.cs      Ingresos del mes y balance contra los gastos ("cuánto te queda")
 │   └── RespaldoService.cs     Exportar y restaurar los datos de un usuario (JSON)
 │   └── Reloj.cs               "Hoy" en la zona horaria de Uruguay
 ├── Infrastructure/    Configuración transversal
@@ -42,11 +43,12 @@ src/ControlGastos.Web/
 │   ├── ExportadorCsv.cs       CSV para Excel (separador ;, coma decimal, BOM, sin inyección de fórmulas)
 │   └── ComandosAdmin.cs       `admin usuarios | reset-password | desbloquear` por consola
 │   └── Fmt.cs                 Formato es-UY (montos, meses) y piezas de UI
-├── Controllers/       Inicio (público), Cuenta, Panel, Gastos, Recurrentes (/fijos), Reportes, Importar,
-│                      TipoCambio, Presupuestos, Tarjetas, Categorias
+├── Controllers/       Inicio (público: muestra el login), Cuenta, Panel, Gastos, Ingresos, Recurrentes (/fijos),
+│                      Reportes, Importar, TipoCambio, Presupuestos, Tarjetas, Categorias
 ├── ViewModels/        Formularios con validación (DataAnnotations)
-├── Views/             Razor; Shared/ tiene el layout, los parciales y el logo
-└── wwwroot/           site.css (diseño), site.js (interacciones), reportes.js (gráficos), Bootstrap,
+├── Views/             Razor; Shared/ tiene el layout, los parciales (_Balance, _Dona, _VistaVacia…) y el logo
+└── wwwroot/           site.css (diseño, ver 11-diseno.md), site.js (interacciones), reportes.js (gráficos),
+                       fonts/ (Bricolage Grotesque), Bootstrap,
                        manifest.webmanifest + sw.js + offline.html + icons/ (app instalable)
 ```
 
@@ -54,7 +56,7 @@ Reglas de dependencia:
 - `Domain` no depende de nada.
 - `Data` depende de `Domain`.
 - `Services` depende de `Data` y `Domain`.
-- Los controladores usan servicios para la lógica de gastos y el `DbContext` directamente para ABM simples (tarjetas, categorías).
+- Los controladores usan servicios para la lógica de gastos y el `DbContext` directamente para ABM simples (tarjetas, categorías, ingresos).
 
 ## Flujo de una request privada
 
@@ -97,14 +99,18 @@ Los meses futuros no se guardan. Se muestran como **previstos** en la vista del 
   - `[data-filter]` en la tabla del mes: filtros por tarjeta y categoría, combinados con tipo y búsqueda, con total recalculado de lo visible.
   - `#form-gasto[data-sugerencias]`: autocompletado de descripciones usadas, en JSON dentro de un atributo (la CSP no permite JSON inline en `<script>`).
   - `#form-tarjeta`: muestra el día de cierre solo para crédito.
+  - `details` plegados: si la validación encuentra un error adentro (por ejemplo, en "Más detalles" del formulario de gasto), lo abre antes de enfocar el campo.
+  - `[data-requisitos]`: en el registro, marca los requisitos de la contraseña mientras se escribe (mismas reglas que Identity).
+  - `[data-dona]`: tooltip y resaltado de la gráfica circular por categoría. El texto se arma con `textContent`.
 - El aviso del estado de cuenta en el formulario repite en JS la regla de `PlanDeCuotas.PeriodoDeFacturacion`. Si cambia una, hay que cambiar la otra.
 - **Indicador de carga** (`site.js`, para la latencia de Vercel):
   - Al enviar un formulario, el botón presionado muestra una ruedita y un segundo envío se ignora, lo que evita gastos duplicados por doble clic. El botón no se deshabilita (`disabled`) porque el navegador dejaría de enviar su valor: "Guardar y cargar otro" depende de eso.
   - Al navegar por un enlace, aparece una barra fina arriba de la pantalla si la página tarda más de 250 ms. Un aviso `role="status"` informa "Cargando…" a los lectores de pantalla.
   - Los enlaces de descarga (`download data-sin-carga`) no activan la barra. Al volver con "atrás", todo se limpia (`pageshow`).
   - El texto del botón se puede cambiar con `data-texto-carga` (por ejemplo "Importando…").
-- El botón flotante `.fab` (por debajo de 992 px) lleva a "Nuevo gasto" desde cualquier pantalla.
-- El gráfico del panel sigue hecho con CSS (sin JS, liviano). Los gráficos interactivos están en **Reportes**, con Chart.js.
+- El botón flotante `.fab` (por debajo de 992 px) lleva a "Nuevo gasto" desde cualquier pantalla, salvo en los formularios y en Ingresos.
+- El gráfico del panel sigue hecho con CSS (sin JS, liviano). La **gráfica circular** por categoría (`_Dona`) es SVG generado en el servidor, sin Chart.js, y se usa en Gastos del mes y en Reportes. Los demás gráficos interactivos están en **Reportes**, con Chart.js.
+- El sistema visual (tokens, tipografía, componentes, accesibilidad) está en [11-diseno.md](11-diseno.md).
 
 ## Servicios externos
 
@@ -117,7 +123,8 @@ Si la app arranca con `admin …` como argumento, `Program.cs` ejecuta el comand
 ## App instalable (PWA)
 
 - `manifest.webmanifest`: nombre, íconos (normal y "maskable"), color, inicio en `/panel` y accesos directos a *Nuevo gasto* y *Gastos del mes*.
-- `sw.js` (service worker): las páginas van **siempre a la red**, nunca se guardan; solo se guardan los estáticos (`/css`, `/js`, `/lib`, `/icons`) y `offline.html`. Así no queda ningún dato financiero en el dispositivo.
+- `sw.js` (service worker): las páginas van **siempre a la red**, nunca se guardan; solo se guardan los estáticos (`/css`, `/js`, `/lib`, `/icons`, `/fonts`) y `offline.html`. Así no queda ningún dato financiero en el dispositivo.
+- Para los estáticos usa primero la **versión exacta** pedida (`site.css?v=…`); la que ignora la versión solo se usa sin conexión. Así un CSS nuevo nunca queda tapado por uno viejo. Igual hay que subir `VERSION` al cambiar `site.css` o `site.js`.
 - La CSP no cambió: el manifest y el service worker son del mismo origen (`'self'`).
 
 ## Reportes (Chart.js)
@@ -126,7 +133,8 @@ Si la app arranca con `admin …` como argumento, `Program.cs` ejecuta el comand
 - Los datos viajan como JSON en `data-datos` de cada `<canvas>`, y `reportes.js` los dibuja. No hay scripts inline.
 - Las decisiones de diseño siguen la guía de visualización:
   - **Gasto por mes**: columnas apiladas por tipo (contado, cuotas, fijos) con la paleta validada para daltonismo (`--series-1..3`) y 2 px de separación entre segmentos. Solo el segmento superior tiene la punta redondeada. Los meses futuros se ven en tono más claro y el tooltip dice "proyección".
-  - **Por categoría y por medio de pago**: barras horizontales de **un solo color**, con el valor en la punta. Más de 7 categorías se agrupan en "Otras", así nunca hay más de 8 barras.
+  - **Por categoría**: gráfica circular con el color de cada categoría, como mucho 6 porciones (las 5 más grandes y "Otras"), leyenda con % y monto, y tooltip con el nombre al pasar el mouse (ver [11-diseno.md](11-diseno.md#gráfica-circular-por-categoría)).
+  - **Por medio de pago**: barras horizontales de **un solo color**, con el valor en la punta.
   - **Una sola moneda por vista**: pesos, dólares o todo en pesos. Nunca dos ejes.
   - Cada gráfico tiene su **tabla de datos** (`<details>`) y una leyenda en HTML.
 - Es responsive: la barra lateral se pliega por debajo de 992 px y a 375 px no hay scroll horizontal.

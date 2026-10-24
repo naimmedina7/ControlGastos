@@ -11,6 +11,7 @@ Cómo usar Mis·Gastos día a día, con ejemplos de un estado de cuenta real.
    - Si es de crédito, el **día de cierre** del estado de cuenta (por ejemplo, 25).
 3. Revisar las **categorías**. Vienen 14 creadas, que puedes renombrar, borrar o ampliar.
 4. Cargar tus **gastos fijos** (Gastos → Gastos fijos): alquiler, facultad, préstamo, suscripciones.
+5. Cargar tus **ingresos** del mes (General → Ingresos): sueldo, ventas, plata que te devolvieron.
 
 ## 2. Cargar un gasto
 
@@ -91,7 +92,9 @@ Así, "Gastos del mes" de noviembre muestra lo que vas a pagar en ese estado de 
   - Cambia de mes con las flechas o con el selector.
   - Filtra por tipo (contado, cuotas, fijos), tarjeta y categoría, y busca por texto.
   - El total de abajo se recalcula con lo filtrado.
+  - **En qué se te va**: una gráfica circular por categoría, con el porcentaje de cada una. Al pasar el mouse (o tocar, en el celular) una porción, te dice qué categoría es; sirve si dos categorías tienen el mismo color.
 - **Cuotas pendientes**: compras que todavía estás pagando, agrupadas por mes de fin.
+- **Ingresos**: lo que te entra cada mes (sueldo, una venta, un préstamo que te devolvieron). Con eso, el inicio muestra **cuánto te queda**: por ejemplo, si entraron $ 40.000 y tus gastos y tarjetas del mes suman $ 20.000, te quedan $ 20.000. La barra muestra qué parte de lo que entró ya se fue, y avisa si te pasaste.
 
 Pesos y dólares **nunca se suman entre sí**: cada total se muestra por moneda.
 
@@ -101,7 +104,7 @@ Análisis → **Reportes**:
 - **Período**: 6 o 12 meses (con 3 meses de proyección), este año, el año anterior, o un rango a medida.
 - **Moneda**: Pesos, Dólares o **Todo en pesos**. Para esta última, carga la cotización del dólar en Herramientas → **Tipo de cambio**. Alcanza con una por mes (o una cada tanto: un mes sin cotización usa la anterior).
 - **Gasto por mes**: columnas por tipo (contado, cuotas, fijos). Los meses futuros, en tono más claro, son lo que ya está comprometido.
-- **Por categoría** y **por medio de pago**: dónde se va la plata y con qué la pagas.
+- **Por categoría** (gráfica circular) y **por medio de pago**: dónde se va la plata y con qué la pagas.
 - Cada gráfico tiene **Ver tabla de datos**, y al pasar el mouse muestra los montos.
 - **Exportar CSV** descarga los movimientos del período para abrirlos en Excel o Google Sheets. En *Gastos del mes* también está el botón **CSV** del mes.
 

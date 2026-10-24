@@ -1,0 +1,75 @@
+@model IngresosMesVm
+@{
+    ViewData["Title"] = "Ingresos";
+    ViewData["Section"] = "General";
+    ViewData["OcultarFab"] = true;   // el "+" flotante es de gastos; acá está "Nuevo ingreso"
+}
+
+<div class="page-head">
+    <div>
+        <span class="eyebrow">@Fmt.MesAnioCap(Model.Mes)@(Model.EsMesActual ? " · mes en curso" : "")</span>
+        <h1>Ingresos</h1>
+        <p>Lo que te entra en @Fmt.MesAnio(Model.Mes): sueldo, ventas, plata que te devolvieron. Restado de tus gastos, te dice cuánto te queda.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Nuevo" asp-route-mes="@Fmt.MesParam(Model.Mes)"><i class="bi bi-plus-lg"></i>Nuevo ingreso</a>
+        <partial name="_MesNav" model="Model.Mes" />
+    </div>
+</div>
+
+<partial name="_Balance" model="(Model.Balance, Model.Mes, false)" />
+
+<section class="card-x" aria-labelledby="ing-title">
+    <div class="card-head">
+        <div>
+            <h2 id="ing-title">Ingresos de @Fmt.MesAnio(Model.Mes)</h2>
+            <div class="sub">@Model.Lista.Count en total</div>
+        </div>
+    </div>
+    @if (Model.Lista.Count == 0)
+    {
+        <div class="empty">
+            <partial name="_VistaVacia" model="@("filas")" />
+            <h3>No hay ingresos en @Fmt.MesAnio(Model.Mes)</h3>
+            <p>Carga tu sueldo o cualquier plata que te entre este mes.</p>
+            <a class="btn btn-primary" asp-action="Nuevo" asp-route-mes="@Fmt.MesParam(Model.Mes)"><i class="bi bi-plus-lg"></i>Nuevo ingreso</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table-x table-apilada">
+                <thead>
+                    <tr>
+                        <th scope="col">Ingreso</th>
+                        <th scope="col" class="amount">Monto</th>
+                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model.Lista)
+                    {
+                        <tr>
+                            <th scope="row">
+                                <div class="cell-main">
+                                    <span class="cat-icon ingreso-icono" aria-hidden="true"><i class="bi @Fmt.Icono(i.Tipo)"></i></span>
+                                    <div>
+                                        <div class="cell-title">@i.Descripcion @Fmt.MonedaBadge(i.Moneda)</div>
+                                        <div class="cell-sub">@Fmt.Fecha(i.Fecha) · @Fmt.Tipo(i.Tipo)@if (!string.IsNullOrEmpty(i.Notas)) { <text> · @i.Notas</text> }</div>
+                                    </div>
+                                </div>
+                            </th>
+                            <td class="amount ingreso-monto" data-label="Monto">+ @Fmt.Money(i.Monto, i.Moneda)</td>
+                            <td class="row-actions">
+                                <a class="btn-icon" asp-action="Editar" asp-route-id="@i.Id" title="Editar" aria-label="Editar @i.Descripcion"><i class="bi bi-pencil"></i></a>
+                                <form method="post" asp-action="Eliminar" asp-route-id="@i.Id" class="d-inline" data-confirm="¿Eliminar el ingreso &quot;@i.Descripcion&quot;?">
+                                    <button type="submit" class="btn-icon danger" title="Eliminar" aria-label="Eliminar @i.Descripcion"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

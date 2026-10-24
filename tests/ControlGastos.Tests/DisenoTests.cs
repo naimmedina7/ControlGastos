@@ -26,7 +26,7 @@ public class DisenoTests(AppFactory factory) : IClassFixture<AppFactory>
     {
         string html = await factory.Cliente().GetStringAsync("/cuenta/login");
         Assert.DoesNotContain("ASP.NET", html);
-        Assert.Contains("Hecho por Fourvexa", html);
+        Assert.Contains("Hecho por <a href=\"https://fourvexa.com/\" target=\"_blank\" rel=\"noopener\">Fourvexa</a>", html);
         foreach (var real in new[] { "Cueva", "Tiendamia", "MERCADOLIBRE", "1012" })
             Assert.DoesNotContain(real, html);
     }

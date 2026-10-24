@@ -308,6 +308,52 @@ namespace ControlGastos.Web.Data.Migrations.Sqlite
                     b.ToTable("GastosRecurrentes", (string)null);
                 });
 
+            modelBuilder.Entity("ControlGastos.Web.Domain.Ingreso", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notas")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Fecha");
+
+                    b.ToTable("Ingresos");
+                });
+
             modelBuilder.Entity("ControlGastos.Web.Domain.Presupuesto", b =>
                 {
                     b.Property<int>("Id")
@@ -632,6 +678,15 @@ namespace ControlGastos.Web.Data.Migrations.Sqlite
                     b.Navigation("Categoria");
 
                     b.Navigation("Tarjeta");
+                });
+
+            modelBuilder.Entity("ControlGastos.Web.Domain.Ingreso", b =>
+                {
+                    b.HasOne("ControlGastos.Web.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ControlGastos.Web.Domain.Presupuesto", b =>

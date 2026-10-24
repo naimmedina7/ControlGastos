@@ -8,10 +8,8 @@
     string vistaParam = r.Vista.ToString();
     string NombreVista(VistaMoneda v) => v switch { VistaMoneda.USD => "Dólares", VistaMoneda.Pesificado => "Todo en pesos", _ => "Pesos" };
 
-    // Categorías: las 7 principales y el resto en "Otras" (nunca más de 8 barras).
-    var cats = r.PorCategoria.Take(7).ToList();
-    var resto = r.PorCategoria.Skip(7).ToList();
-    if (resto.Count > 0) cats.Add(new TotalGrupo($"Otras ({resto.Count})", "#64748b", "bi-three-dots", resto.Sum(x => x.Total), resto.Sum(x => x.Cantidad)));
+    // Categorías: dona con las 5 principales y el resto en "Otras" (nunca más de 6 porciones).
+    var dona = DonaVm.Crear(r.PorCategoria.Select(c => new PorcionDona(c.Nombre, c.Color, c.Total)), mon);
 
     string datosMeses = System.Text.Json.JsonSerializer.Serialize(new
     {
@@ -23,7 +21,6 @@
             contado = m.Contado, cuotas = m.Cuotas, fijos = m.Fijos, proyectado = m.Proyectado,
         }),
     });
-    string datosCat = System.Text.Json.JsonSerializer.Serialize(new { moneda = mon.ToString(), items = cats.Select(c => new { nombre = c.Nombre, total = c.Total }) });
     string datosTar = System.Text.Json.JsonSerializer.Serialize(new { moneda = mon.ToString(), items = r.PorTarjeta.Take(8).Select(c => new { nombre = c.Nombre, total = c.Total }) });
     string periodo = $"{Fmt.MesAnio(r.Desde)} a {Fmt.MesAnio(r.Hasta < r.MesActual ? r.Hasta : r.MesActual)}";
 }
@@ -174,15 +171,13 @@ else if (r.Vista == VistaMoneda.Pesificado)
             </div>
         </div>
         <div class="card-body-x">
-            @if (cats.Count == 0)
+            @if (dona.Porciones.Count == 0)
             {
                 <div class="empty py-4"><div class="empty-icon"><i class="bi bi-pie-chart"></i></div><p>Sin gastos en el período.</p></div>
             }
             else
             {
-                <div class="viz-box" style="height:@(Math.Max(160, cats.Count * 38 + 30))px">
-                    <canvas data-chart="barras" data-datos="@datosCat" role="img" aria-label="Gráfico de barras del gasto por categoría. Los datos están en la tabla siguiente."></canvas>
-                </div>
+                <partial name="_Dona" model="dona" />
                 <details class="viz-table">
                     <summary>Ver tabla de datos</summary>
                     <table class="table-x">

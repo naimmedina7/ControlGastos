@@ -1,0 +1,69 @@
+@model (Balance Balance, DateOnly Mes, bool EnPanel)
+@* Ingresos del mes menos lo que se paga ese mes, por moneda. En el panel enlaza a Ingresos. *@
+@{
+    var b = Model.Balance;
+    bool dosMonedas = b.Visibles.Count() > 1;
+}
+<section class="card-x balance mb-4" aria-labelledby="bal-title">
+    <div class="card-head">
+        <div>
+            <h2 id="bal-title">Cuánto te queda</h2>
+            <div class="sub">Lo que entró en @Fmt.MesAnio(Model.Mes) menos lo que pagas ese mes</div>
+        </div>
+        @if (Model.EnPanel)
+        {
+            <a class="link-arrow" asp-controller="Ingresos" asp-action="Index" asp-route-mes="@Fmt.MesParam(Model.Mes)">Ingresos <i class="bi bi-arrow-right"></i></a>
+        }
+    </div>
+    <div class="card-body-x">
+        @if (!b.HayIngresos)
+        {
+            <div class="balance-vacio">
+                <p>Carga lo que te entra este mes (sueldo, una venta, un préstamo que te devolvieron) y acá vas a ver cuánto te queda después de pagar tus gastos y tarjetas.</p>
+                <a class="btn btn-primary" asp-controller="Ingresos" asp-action="Nuevo" asp-route-mes="@Fmt.MesParam(Model.Mes)"><i class="bi bi-plus-lg"></i>Cargar un ingreso</a>
+            </div>
+        }
+        else
+        {
+            foreach (var m in b.Visibles)
+            {
+                <div class="balance-fila">
+                    @if (dosMonedas) { <div class="balance-moneda">@(m.Moneda == Moneda.USD ? "En dólares" : "En pesos")</div> }
+                    @if (m.Ingresos == 0)
+                    {
+                        @* Sin ingresos en esta moneda no hay nada que restar: solo lo gastado, sin alarmas. *@
+                        <dl class="balance-cifras">
+                            <div><dt>Gastos del mes</dt><dd>@Fmt.Money(m.Gastos, m.Moneda)</dd></div>
+                        </dl>
+                        <p class="balance-nota mt-2">No cargaste ingresos en @(m.Moneda == Moneda.USD ? "dólares" : "pesos") este mes.</p>
+                    }
+                    else
+                    {
+                        bool negativo = m.Queda < 0;
+                        decimal pct = m.PorcentajeGastado;
+                        string estado = pct > 100 ? "excedido" : pct >= 80 ? "cerca" : "ok";
+                        <dl class="balance-cifras">
+                            <div><dt>Ingresos</dt><dd>@Fmt.Money(m.Ingresos, m.Moneda)</dd></div>
+                            <div><dt>Gastos del mes</dt><dd>@Fmt.Money(m.Gastos, m.Moneda)</dd></div>
+                            <div class="balance-queda @(negativo ? "negativo" : "")">
+                                <dt>@(negativo ? "Te pasaste por" : "Te queda")</dt>
+                                <dd>@Fmt.MoneyHtml(Math.Abs(m.Queda), m.Moneda)</dd>
+                            </div>
+                        </dl>
+                        <div class="balance-barra @estado" aria-hidden="true"><span style="width:@Fmt.Pct(Math.Min(m.Gastos, m.Ingresos), m.Ingresos)%"></span></div>
+                        <p class="balance-nota">
+                            @if (negativo)
+                            {
+                                <text>Gastaste @Fmt.Money(-m.Queda, m.Moneda) más de lo que entró.</text>
+                            }
+                            else
+                            {
+                                <text>Ya se fue el @Fmt.PctTexto(m.Gastos, m.Ingresos) % de lo que entró.</text>
+                            }
+                        </p>
+                    }
+                </div>
+            }
+        }
+    </div>
+</section>

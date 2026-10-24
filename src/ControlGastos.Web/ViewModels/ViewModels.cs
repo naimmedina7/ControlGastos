@@ -278,6 +278,8 @@ public class PanelVm
     public ResumenMes? MesAnterior { get; set; }
     public List<MesProyectado> Proximos { get; set; } = new();
     public List<EstadoPresupuesto> Presupuestos { get; set; } = new();
+    /// <summary>Ingresos del mes contra los gastos: cuánto te queda.</summary>
+    public Balance Balance { get; set; } = null!;
 }
 
 public class GastosMesVm
@@ -378,4 +380,97 @@ public class PresupuestosVm
     public List<EstadoPresupuesto> Estados { get; set; } = new();
     public List<Categoria> Categorias { get; set; } = new();
     public PresupuestoFormVm Form { get; set; } = new();
+}
+
+// ---------------- Ingresos ----------------
+
+public class IngresoFormVm
+{
+    public int? Id { get; set; }
+
+    [Required(ErrorMessage = "Ingresa una descripción.")]
+    [StringLength(120, ErrorMessage = "Máximo 120 caracteres.")]
+    public string Descripcion { get; set; } = "";
+
+    public TipoIngreso Tipo { get; set; } = TipoIngreso.Sueldo;
+
+    [Required(ErrorMessage = "Ingresa la fecha.")]
+    public DateOnly Fecha { get; set; }
+
+    public Moneda Moneda { get; set; } = Moneda.UYU;
+
+    [Range(typeof(decimal), "0.01", "99999999", ErrorMessage = "El monto debe ser mayor a cero.")]
+    public decimal Monto { get; set; }
+
+    [StringLength(500, ErrorMessage = "Máximo 500 caracteres.")]
+    public string? Notas { get; set; }
+
+    public static IngresoFormVm Desde(Ingreso i) => new()
+    {
+        Id = i.Id, Descripcion = i.Descripcion, Tipo = i.Tipo, Fecha = i.Fecha, Moneda = i.Moneda, Monto = i.Monto, Notas = i.Notas,
+    };
+
+    /// <summary>Copia los campos editables (ya validados) sobre la entidad.</summary>
+    public void Aplicar(Ingreso i)
+    {
+        i.Descripcion = Descripcion.Trim();
+        i.Tipo = Enum.IsDefined(Tipo) ? Tipo : TipoIngreso.Otro;
+        i.Fecha = Fecha;
+        i.Moneda = Enum.IsDefined(Moneda) ? Moneda : Moneda.UYU;
+        i.Monto = decimal.Round(Monto, 2);
+        i.Notas = string.IsNullOrWhiteSpace(Notas) ? null : Notas.Trim();
+    }
+}
+
+public class IngresosMesVm
+{
+    public DateOnly Mes { get; set; }
+    public bool EsMesActual { get; set; }
+    public List<Ingreso> Lista { get; set; } = new();
+    public Balance Balance { get; set; } = null!;
+}
+
+/// <summary>Lo que entra y lo que sale en un mes, en una moneda. Pesos y dólares no se mezclan.</summary>
+public record BalanceMoneda(Moneda Moneda, decimal Ingresos, decimal Gastos)
+{
+    public decimal Queda => Ingresos - Gastos;
+    /// <summary>Qué parte de lo que entró ya se gastó (0–100; más de 100 si se gastó más de lo que entró).</summary>
+    public decimal PorcentajeGastado => Ingresos > 0 ? Math.Round(Gastos / Ingresos * 100, 1) : 0;
+}
+
+public record Balance(BalanceMoneda Pesos, BalanceMoneda Dolares)
+{
+    public bool HayIngresos => Pesos.Ingresos > 0 || Dolares.Ingresos > 0;
+    /// <summary>Monedas que tienen algo que mostrar (pesos siempre).</summary>
+    public IEnumerable<BalanceMoneda> Visibles =>
+        Dolares.Ingresos > 0 || Dolares.Gastos > 0 ? new[] { Pesos, Dolares } : new[] { Pesos };
+}
+
+// ---------------- Gráfica circular por categoría ----------------
+
+public record PorcionDona(string Nombre, string Color, decimal Total);
+
+/// <summary>Dona de "en qué se va": las 5 categorías más grandes y el resto junto en "Otras" (nunca más de 6 porciones).</summary>
+public class DonaVm
+{
+    public const int MaxPorciones = 6;
+    public const string ColorOtras = "#a3aca7";
+
+    public Moneda Moneda { get; init; }
+    public List<PorcionDona> Porciones { get; init; } = new();
+    public decimal Total => Porciones.Sum(p => p.Total);
+    /// <summary>Cuántas categorías reales hay detrás (incluidas las que se juntaron en "Otras").</summary>
+    public int Categorias { get; init; }
+
+    public static DonaVm Crear(IEnumerable<PorcionDona> items, Moneda moneda)
+    {
+        var orden = items.Where(i => i.Total > 0).OrderByDescending(i => i.Total).ToList();
+        var porciones = orden.Count <= MaxPorciones ? orden : orden.Take(MaxPorciones - 1).ToList();
+        if (orden.Count > MaxPorciones)
+        {
+            var resto = orden.Skip(MaxPorciones - 1).ToList();
+            porciones.Add(new PorcionDona($"Otras ({resto.Count})", ColorOtras, resto.Sum(r => r.Total)));
+        }
+        return new DonaVm { Moneda = moneda, Porciones = porciones, Categorias = orden.Count };
+    }
 }

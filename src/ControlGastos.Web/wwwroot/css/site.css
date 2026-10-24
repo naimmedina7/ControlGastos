@@ -284,6 +284,50 @@ small, .small { font-size: max(.875em, 12px); }
 .escalera li:first-child .escalon { background: var(--amber-ink); }
 .escalon-mes { font-size: .8rem; line-height: 1; color: var(--muted); }
 
+/* ---------- Cuánto te queda (ingresos − gastos del mes) ---------- */
+.balance-vacio { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.balance-vacio p { margin: 0; max-width: 62ch; font-size: .92rem; color: var(--text-2); }
+.balance-fila + .balance-fila { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.balance-moneda { margin-bottom: 10px; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.balance-cifras { margin: 0; display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 16px; align-items: end; }
+.balance-cifras dt { margin-bottom: 4px; font-size: .85rem; font-weight: 600; color: var(--text-2); }
+.balance-cifras dd { margin: 0; font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.balance-queda dd { font-size: clamp(2rem, 3vw, 2.5rem); line-height: 1.05; color: var(--accent-deep); }
+.balance-queda .cur { font-size: .55em; margin-right: 4px; vertical-align: .38em; color: var(--text-2); }
+.balance-queda .cents { font-size: max(.55em, 12px); color: var(--text-2); }
+.balance-queda.negativo dd { color: var(--danger-ink); }
+.balance-barra { height: 10px; margin: 16px 0 8px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
+.balance-barra span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--accent); }
+.balance-barra.cerca span { background: var(--amber); }
+.balance-barra.excedido span { background: var(--danger); }
+.balance-nota { margin: 0; font-size: .85rem; color: var(--text-2); }
+/* Ingresos: verde de "entra plata", distinto del color sólido de las categorías de gasto. */
+.cat-icon.ingreso-icono { background: var(--accent-soft); color: var(--accent-deep); }
+.table-x td.ingreso-monto { color: var(--accent-deep); }
+
+/* ---------- Gráfica circular por categoría (_Dona) ---------- */
+.dona { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: center; }
+.dona-grafico { position: relative; width: 180px; height: 180px; }
+.dona-grafico svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dona-pista { fill: none; stroke: var(--surface-3); stroke-width: 26; }
+.dona-porcion { fill: none; stroke-width: 26; cursor: pointer; transition: opacity .15s, stroke-width .15s; }
+.dona-porcion.on { stroke-width: 30; }
+.dona.resaltando .dona-porcion:not(.on) { opacity: .28; }
+.dona-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+.dona-total { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.dona-sub { font-size: .8rem; color: var(--muted); }
+.dona-tip { position: absolute; z-index: 5; display: grid; gap: 2px; padding: 8px 11px; border-radius: 10px; background: var(--ink); color: #fff; font-size: .8rem; white-space: nowrap; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); box-shadow: var(--shadow-pop); }
+.dona-tip[hidden] { display: none; }
+.dona-tip span { color: var(--ink-text); font-variant-numeric: tabular-nums; }
+.dona-leyenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-width: 560px; }
+.dona-leyenda li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; font-size: .87rem; transition: background .12s; }
+.dona-leyenda li.on { background: var(--surface-2); }
+.dona-sw { width: 12px; height: 12px; border-radius: 4px; }
+.dona-nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dona-pct { min-width: 3.6em; text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.dona-monto { text-align: right; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.donas-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+
 /* ---------- Grillas ---------- */
 .grid-2-1 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; margin-bottom: 20px; }
 .grid-1-1 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
@@ -342,6 +386,7 @@ small, .small { font-size: max(.875em, 12px); }
 .table-x thead th:last-child { padding-right: 24px; }
 .table-x tbody td, .table-x tbody th { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; text-align: left; }
 .table-x tbody th { font-weight: 600; }
+.table-x tbody th .cell-sub { font-weight: 400; }
 .table-x tbody td:first-child, .table-x tbody th:first-child { padding-left: 24px; }
 .table-x tbody td:last-child { padding-right: 24px; }
 .table-x tbody tr { transition: background .12s; }
@@ -710,6 +755,8 @@ small, .small { font-size: max(.875em, 12px); }
 .hero-card .cuotas-avance i.on { background: var(--amber); }
 .hc-tag { font-size: .8rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill); background: rgba(251, 191, 36, .14); color: var(--amber); font-variant-numeric: tabular-nums; }
 .auth-foot { font-size: .82rem; color: var(--ink-label); }
+.auth-foot a { color: var(--mint); text-decoration: underline; text-underline-offset: 3px; }
+.auth-foot a:hover { color: var(--ink-strong); }
 .auth-form-side { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px 32px; background: var(--surface); }
 .auth-form { width: 100%; max-width: 400px; }
 .auth-form h2 { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; margin: 0 0 6px; }
@@ -731,6 +778,7 @@ small, .small { font-size: max(.875em, 12px); }
    ========================================================================= */
 @media (max-width: 1280px) {
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .donas-2 { grid-template-columns: minmax(0, 1fr); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "p p" "u c" "f f"; }
 }
 @media (max-width: 1100px) {
@@ -774,6 +822,10 @@ small, .small { font-size: max(.875em, 12px); }
   .escalon-pista { justify-content: center; }
   .escalon { max-width: 36px; }
   .mas-detalles > summary { padding: 16px; }
+  .balance-cifras { grid-template-columns: 1fr 1fr; }
+  .balance-queda { grid-column: 1 / -1; order: -1; }
+  .dona { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .dona-leyenda { width: 100%; }
   .period-chip, .user-menu-btn .meta { display: none; }
   .topbar .crumbs .crumb-root, .topbar .crumbs > i { display: none; }
   .method-options { grid-template-columns: 1fr; }

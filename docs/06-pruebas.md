@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-168 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
+203 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
 
 ## Qué cubren
 
@@ -129,6 +129,20 @@ dotnet test
 ### `ConexionTests` y `FechasUtcTests`: problemas del primer deploy
 - La conexión se lee de `DATABASE_URL` con el formato de Neon, de los nombres alternativos de la integración (`POSTGRES_URL`, *unpooled*, con prefijo) o de `ConnectionStrings__Default` como URL. Si falta, el error lista solo los nombres de las variables.
 - Todas las fechas se guardan en UTC: el modelo de PostgreSQL aplica el conversor a cada `DateTime`, y un respaldo con fechas sin zona (exportado desde SQLite) se restaura bien.
+
+### `DisenoTests`: rediseño visual
+- Pantalla de acceso: vista previa para compartir el link (Open Graph), título sin repetir, `noindex`, sin el nombre del stack ni datos reales, crédito con enlace a fourvexa.com.
+- Estilos: ningún texto menor a 12 px, tokens de color del sistema, paleta de gráficos sin cambios, sin degradados en la tarjeta principal, fuente alojada y precargada.
+- Ícono de categoría: siempre contrasta con su fondo (blanco u oscuro según el color).
+- Avance de cuotas por segmentos; "Más detalles" del gasto plegado y abierto si hay errores; panel en bento con escalera y estados vacíos.
+- La portada es el login y entra por `/cuenta/login`; "¿Olvidaste tu contraseña?" solo texto; requisitos de la contraseña en el registro.
+
+### `IngresosTests`: ingresos, cuánto te queda y gráfica circular
+- Alta, edición y borrado de un ingreso; validación de descripción y monto.
+- Aislamiento: otro usuario no ve, no edita y no borra tus ingresos (404). `/ingresos` es privada.
+- El inicio muestra cuánto te queda (40.000 − 20.000 = 20.000) y avisa si gastaste más de lo que entró. Sin ingresos en dólares no avisa nada en dólares. Pesos y dólares no se mezclan.
+- El respaldo (versión 2) incluye los ingresos y los restaura; un respaldo de la versión 1 se sigue pudiendo leer.
+- La dona tiene como mucho 6 porciones (resto en "Otras"); en Gastos del mes lleva nombre y % de cada categoría para el tooltip y la leyenda; también está en Reportes.
 
 ### `IndicadorCargaTests`
 - Las páginas públicas y privadas incluyen la barra de carga y el aviso accesible.
