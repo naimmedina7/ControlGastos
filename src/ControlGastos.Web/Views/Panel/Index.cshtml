@@ -16,6 +16,15 @@
     decimal top = step * lines;
     var porCategoria = (r.PorCategoria, Model.EsMesActual ? "Todavía no hay gastos este mes." : "No hay gastos en este mes.");
     var porTarjeta = (r.PorTarjeta, "Sin gastos en este mes.");
+
+    // Desglose del total en pesos (contado, cuotas y fijos) para la tarjeta principal.
+    var lineasUyu = r.Lineas.Where(l => l.Gasto.Moneda == Moneda.UYU).ToList();
+    decimal enCuotasUyu = lineasUyu.Where(l => l.Gasto.EnCuotas).Sum(l => l.Monto);
+    decimal fijosUyu = lineasUyu.Where(l => !l.Gasto.EnCuotas && l.Gasto.EsFijo).Sum(l => l.Monto);
+
+    // Próximos meses: lo que ya está cargado (sin los fijos previstos).
+    var escalones = Model.Proximos.Where(p => p.Mes > Model.Mes).Select(p => (p.Mes, Monto: p.UYU - p.PrevistoUYU)).ToList();
+    decimal maxEscalon = escalones.Count > 0 ? escalones.Max(e => e.Monto) : 0;
 }
 
 <div class="page-head">
@@ -29,39 +38,46 @@
     </div>
 </div>
 
-<section class="kpi-grid" aria-label="Indicadores del mes">
-    <article class="card-x kpi featured">
-        <div class="kpi-top">
-            <span class="kpi-label">Total del mes en pesos</span>
-            <span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+<section class="bento" aria-label="Indicadores del mes">
+    <article class="card-x kpi featured bento-principal">
+        <div>
+            <div class="kpi-top">
+                <span class="kpi-label">Total del mes en pesos</span>
+            </div>
+            <div class="kpi-value">@Fmt.MoneyHtml(uyu)</div>
+            <div class="kpi-meta">
+                @if (uyuAnterior > 0)
+                {
+                    <span class="delta @deltaCls"><i class="bi @deltaIcon" aria-hidden="true"></i>@(Math.Abs(delta).ToString("0.0"))%</span>
+                    <span>vs. @Fmt.MesAnio(Model.Mes.AddMonths(-1))</span>
+                }
+                else
+                {
+                    <span>Sin gastos el mes anterior</span>
+                }
+            </div>
         </div>
-        <div class="kpi-value">@Fmt.MoneyHtml(uyu)</div>
-        <div class="kpi-meta">
-            @if (uyuAnterior > 0)
-            {
-                <span class="delta @deltaCls"><i class="bi @deltaIcon" aria-hidden="true"></i>@(Math.Abs(delta).ToString("0.0"))%</span>
-                <span>vs. @Fmt.MesAnio(Model.Mes.AddMonths(-1))</span>
-            }
-            else
-            {
-                <span>Sin gastos el mes anterior</span>
-            }
-        </div>
+        @if (uyu > 0)
+        {
+            <dl class="desglose">
+                <div><dt><span class="desglose-dot cuotas" aria-hidden="true"></span>En cuotas</dt><dd>@Fmt.Money(enCuotasUyu)</dd></div>
+                <div><dt><span class="desglose-dot fijos" aria-hidden="true"></span>Gastos fijos</dt><dd>@Fmt.Money(fijosUyu)</dd></div>
+                <div><dt><span class="desglose-dot" aria-hidden="true"></span>Al contado</dt><dd>@Fmt.Money(uyu - enCuotasUyu - fijosUyu)</dd></div>
+            </dl>
+        }
     </article>
 
-    <article class="card-x kpi">
+    <article class="card-x kpi bento-usd">
         <div class="kpi-top">
             <span class="kpi-label">Total del mes en dólares</span>
-            <span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span>
         </div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.USD), Moneda.USD)</div>
         <div class="kpi-meta">@r.Lineas.Count(l => l.Gasto.Moneda == Moneda.USD) gasto(s) en USD</div>
     </article>
 
-    <article class="card-x kpi">
+    <article class="card-x kpi kpi-cuotas bento-cuotas">
         <div class="kpi-top">
             <span class="kpi-label">Cuotas este mes</span>
-            <span class="kpi-icon accent"><i class="bi bi-calendar2-range" aria-hidden="true"></i></span>
         </div>
         <div class="kpi-value">@r.EnCuotas</div>
         <div class="kpi-meta">
@@ -70,16 +86,30 @@
         </div>
     </article>
 
-    <article class="card-x kpi">
-        <div class="kpi-top">
-            <span class="kpi-label">Comprometido a futuro</span>
-            <span class="kpi-icon accent"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+    <article class="card-x kpi bento-futuro">
+        <div class="bento-futuro-texto">
+            <div class="kpi-top">
+                <span class="kpi-label">Comprometido a futuro</span>
+            </div>
+            <div class="kpi-value">@Fmt.MoneyHtml(r.Pendiente(Moneda.UYU))</div>
+            <div class="kpi-meta">
+                @if (r.Pendiente(Moneda.USD) > 0) { <span>+ @Fmt.Money(r.Pendiente(Moneda.USD), Moneda.USD)</span> }
+                <span>cuotas después de @Fmt.MesAnio(Model.Mes)</span>
+            </div>
         </div>
-        <div class="kpi-value">@Fmt.MoneyHtml(r.Pendiente(Moneda.UYU))</div>
-        <div class="kpi-meta">
-            @if (r.Pendiente(Moneda.USD) > 0) { <span>+ @Fmt.Money(r.Pendiente(Moneda.USD), Moneda.USD)</span> }
-            <span>cuotas después de @Fmt.MesAnio(Model.Mes)</span>
-        </div>
+        @if (maxEscalon > 0)
+        {
+            @* Escalera: lo ya cargado (cuotas) en cada uno de los próximos meses. Baja a medida que terminan. *@
+            <ol class="escalera" aria-label="Ya cargado en los próximos meses">
+                @foreach (var p in escalones)
+                {
+                    <li>
+                        <span class="escalon-pista"><span class="escalon" style="height:@Fmt.Pct(p.Monto, maxEscalon)%"></span></span>
+                        <span class="escalon-mes"><span class="visually-hidden">@Fmt.MesAnio(p.Mes): @Fmt.Money(p.Monto)</span><span aria-hidden="true">@Fmt.MesCorto(p.Mes)</span></span>
+                    </li>
+                }
+            </ol>
+        }
     </article>
 </section>
 
@@ -185,7 +215,7 @@
         @if (r.Lineas.Count == 0)
         {
             <div class="empty">
-                <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+                <partial name="_VistaVacia" model="@("filas")" />
                 <h3>Sin gastos en @Fmt.MesAnio(Model.Mes)</h3>
                 <p>Carga tu primer gasto para verlo acá.</p>
                 <a class="btn btn-primary" asp-controller="Gastos" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto</a>

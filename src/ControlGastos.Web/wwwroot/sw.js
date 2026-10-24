@@ -3,7 +3,7 @@
 // Solo se guardan archivos estáticos (estilos, scripts, íconos) y una página "sin conexión".
 "use strict";
 
-const VERSION = "mis-gastos-v2"; // subir al cambiar site.js o site.css
+const VERSION = "mis-gastos-v6"; // subir al cambiar site.js o site.css
 const PRECARGA = [
   "/offline.html",
   "/css/site.css",
@@ -12,7 +12,7 @@ const PRECARGA = [
   "/lib/bootstrap/dist/js/bootstrap.bundle.min.js",
   "/icons/icon-192.png",
 ];
-const ESTATICOS = /^\/(css|js|lib|icons)\//;
+const ESTATICOS = /^\/(css|js|lib|icons|fonts)\//;
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(PRECARGA)).then(() => self.skipWaiting()));
@@ -38,16 +38,23 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Estáticos: se sirven de la caché y se actualizan en segundo plano.
+  // Estáticos. Los que llevan versión en la URL (?v=…, de asp-append-version) cambian de URL con cada deploy:
+  // se busca la versión EXACTA en caché y, si no está, se trae de la red. Cualquier versión guardada de ese
+  // archivo se usa solo sin conexión. Así nunca se mezcla HTML nuevo con CSS o JS viejos.
   if (ESTATICOS.test(url.pathname)) {
     e.respondWith(
       caches.open(VERSION).then(async (cache) => {
-        const guardada = await cache.match(req, { ignoreSearch: true });
-        const red = fetch(req).then((resp) => {
+        const exacta = await cache.match(req);
+        if (exacta) return exacta;
+        try {
+          const resp = await fetch(req);
           if (resp.ok) cache.put(req, resp.clone());
           return resp;
-        }).catch(() => guardada);
-        return guardada || red;
+        } catch (err) {
+          const cualquiera = await cache.match(req, { ignoreSearch: true });
+          if (cualquiera) return cualquiera;
+          throw err;
+        }
       })
     );
   }

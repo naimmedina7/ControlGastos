@@ -28,17 +28,17 @@
 
 <section class="kpi-grid kpi-3" aria-label="Totales del mes">
     <article class="card-x kpi featured">
-        <div class="kpi-top"><span class="kpi-label">En pesos</span><span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">En pesos</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.UYU))</div>
         <div class="kpi-meta">@(r.Lineas.Count - nUsd) gasto(s)</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">En dólares</span><span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">En dólares</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.USD), Moneda.USD)</div>
         <div class="kpi-meta">@nUsd gasto(s)</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Comprometido después de este mes</span><span class="kpi-icon accent"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Comprometido después de este mes</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Pendiente(Moneda.UYU))</div>
         <div class="kpi-meta">@if (r.Pendiente(Moneda.USD) > 0) { <span>+ @Fmt.Money(r.Pendiente(Moneda.USD), Moneda.USD) ·</span> } <a asp-action="Cuotas">Ver cuotas pendientes</a></div>
     </article>
@@ -103,7 +103,7 @@
     @if (r.Lineas.Count == 0)
     {
         <div class="empty">
-            <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+            <partial name="_VistaVacia" model="@("filas")" />
             <h3>No hay gastos en @Fmt.MesAnio(Model.Mes)</h3>
             <p>Cuando cargues un gasto (o una compra en cuotas que tenga una cuota este mes), aparece acá.</p>
             <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto</a>
@@ -147,7 +147,7 @@
                                 @if (g.EnCuotas)
                                 {
                                     <div><span class="cuota-pill">@l.Numero/@g.CantidadCuotas</span> @if (l.EsUltima) { <span class="chip chip-ok">última</span> }</div>
-                                    <div class="cell-sub">@Fmt.MesCortoAnio(g.PrimerPeriodo) <i class="bi bi-arrow-right" style="font-size:.7rem"></i> @Fmt.MesCortoAnio(g.UltimoPeriodo) <span class="progress-mini" aria-hidden="true"><span style="width:@(l.Numero * 100 / g.CantidadCuotas)%"></span></span></div>
+                                    <div class="cell-sub">@Fmt.MesCortoAnio(g.PrimerPeriodo) <i class="bi bi-arrow-right" style="font-size:.7rem"></i> @Fmt.MesCortoAnio(g.UltimoPeriodo) @Fmt.ProgresoCuotas(l.Numero, g.CantidadCuotas)</div>
                                 }
                                 else if (g.EsFijo)
                                 {

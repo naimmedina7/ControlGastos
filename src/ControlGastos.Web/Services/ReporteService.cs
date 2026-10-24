@@ -128,7 +128,7 @@ public class ReporteService(AppDbContext db, GastoService gastos, CotizacionServ
                 continue;
             }
             convertidas.Add((c.Periodo, monto.Value, c.EsFijo, c.EnCuotas,
-                c.Categoria?.Nombre ?? "Sin categoría", c.Categoria?.Color ?? "#94a3b8", c.Categoria?.Icono ?? "bi-question-circle",
+                c.Categoria?.Nombre ?? "Sin categoría", c.Categoria?.Color ?? "#64748b", c.Categoria?.Icono ?? "bi-question-circle",
                 c.Tarjeta?.Nombre ?? "Efectivo / transferencia", c.Tarjeta?.Color ?? "#64748b"));
         }
 

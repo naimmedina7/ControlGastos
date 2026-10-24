@@ -1,18 +1,41 @@
+@{
+    // Título de la pestaña: "Sección · Mis·Gastos". La portada usa uno propio para no repetir la marca.
+    string titulo = ViewData["TituloCompleto"] as string ?? $"{ViewData["Title"] ?? "Inicio"} · Mis·Gastos";
+    const string descripcion = "Tus tarjetas y tus cuotas, claras mes a mes. Gastos en pesos y dólares, cuotas que se reparten solas y reportes simples.";
+    string origen = $"{Context.Request.Scheme}://{Context.Request.Host}";
+}
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>@(ViewData["Title"] ?? "Inicio") · Mis·Gastos</title>
-<meta name="description" content="Mis·Gastos: control de gastos personales con tarjetas, cuotas y monedas." />
+<title>@titulo</title>
+<meta name="description" content="@descripcion" />
+@* App privada: no se indexa en buscadores. La vista previa al compartir el link funciona igual. *@
 <meta name="robots" content="noindex" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23059669'/%3E%3Crect x='8' y='16' width='4' height='8' rx='2' fill='%23fff' fill-opacity='.55'/%3E%3Crect x='14' y='12' width='4' height='12' rx='2' fill='%23fff' fill-opacity='.8'/%3E%3Crect x='20' y='8' width='4' height='16' rx='2' fill='%23fff'/%3E%3C/svg%3E" />
+@* Vista previa al compartir (WhatsApp, Telegram, redes) *@
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Mis·Gastos" />
+<meta property="og:locale" content="es_UY" />
+<meta property="og:title" content="Mis·Gastos · Control de gastos personales" />
+<meta property="og:description" content="@descripcion" />
+<meta property="og:url" content="@origen/" />
+<meta property="og:image" content="@origen/icons/og-imagen.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Mis·Gastos: tus tarjetas y tus cuotas, claras mes a mes." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Mis·Gastos · Control de gastos personales" />
+<meta name="twitter:description" content="@descripcion" />
+<meta name="twitter:image" content="@origen/icons/og-imagen.png" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23047857'/%3E%3Crect x='8' y='16' width='4' height='8' rx='2' fill='%23fff' fill-opacity='.55'/%3E%3Crect x='14' y='12' width='4' height='12' rx='2' fill='%23fff' fill-opacity='.8'/%3E%3Crect x='20' y='8' width='4' height='16' rx='2' fill='%23fff'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+<link rel="preload" href="/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 @* App instalable (PWA) *@
 <link rel="manifest" href="/manifest.webmanifest" />
-<meta name="theme-color" content="#059669" />
+<meta name="theme-color" content="#047857" />
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />

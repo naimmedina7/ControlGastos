@@ -12,9 +12,9 @@
     s1: v("--series-1", "#2a78d6"),
     s2: v("--series-2", "#eb6834"),
     s3: v("--series-3", "#1baf7a"),
-    texto: v("--text-2", "#475467"),
-    tenue: v("--muted", "#8a93a3"),
-    grilla: v("--viz-grid", "#eceef2"),
+    texto: v("--text-2", "#5b6b63"),
+    tenue: v("--muted", "#647069"),
+    grilla: v("--viz-grid", "#e6e9e4"),
     superficie: v("--surface", "#ffffff"),
   };
 
@@ -39,12 +39,12 @@
   }
 
   var tooltipBase = {
-    backgroundColor: "#0f172a",
+    backgroundColor: v("--ink", "#0b1f1a"),
     titleColor: "#fff",
-    bodyColor: "#e2e8f0",
+    bodyColor: v("--ink-text", "#b9c7c0"),
     footerColor: "#fff",
     padding: 10,
-    cornerRadius: 8,
+    cornerRadius: 10,
     boxPadding: 4,
     usePointStyle: true,
   };

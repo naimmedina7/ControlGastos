@@ -447,9 +447,9 @@ public class Etapa5HttpTests(AppFactory factory) : IClassFixture<AppFactory>
     public async Task El_service_worker_no_guarda_paginas_con_datos()
     {
         string sw = await factory.Cliente().GetStringAsync("/sw.js");
-        // Las páginas van siempre a la red; solo se guardan en caché css, js, lib e íconos.
+        // Las páginas van siempre a la red; solo se guardan en caché css, js, lib, íconos y fuentes.
         Assert.Contains("e.respondWith(fetch(req).catch(() => caches.match(\"/offline.html\")))", sw);
-        Assert.Contains(@"const ESTATICOS = /^\/(css|js|lib|icons)\//;", sw);
+        Assert.Contains(@"const ESTATICOS = /^\/(css|js|lib|icons|fonts)\//;", sw);
         Assert.Single(Regex.Matches(sw, @"cache\.put\("));
     }
 }

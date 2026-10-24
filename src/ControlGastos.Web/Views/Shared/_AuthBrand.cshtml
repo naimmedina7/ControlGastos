@@ -15,18 +15,20 @@
             <li><i class="bi bi-shield-lock" aria-hidden="true"></i>Tus datos solo los ves tú: cuentas aisladas y contraseñas cifradas</li>
         </ul>
 
-        <div class="preview-card" aria-hidden="true">
-            <div class="pc-head"><span>Comprometido en cuotas · próximos 6 meses</span><span><i class="bi bi-graph-down-arrow"></i></span></div>
-            <div class="pc-bars">
-                <div class="on" style="height:92%"></div><div style="height:74%"></div><div style="height:61%"></div>
-                <div style="height:47%"></div><div style="height:30%"></div><div style="height:18%"></div>
+        @* Tarjeta de ejemplo. Los importes y las compras son inventados: es una página pública. *@
+        <div class="hero-card" aria-hidden="true">
+            <div class="hc-head"><span>Cuotas · próximos meses</span><span class="hc-chip">6 meses</span></div>
+            <div class="hc-total"><span class="cur">$</span>18.320</div>
+            <div class="hc-escalera">
+                <span style="height:100%"></span><span style="height:80%"></span><span style="height:66%"></span>
+                <span style="height:50%"></span><span style="height:32%"></span><span style="height:18%"></span>
             </div>
-            <div class="pc-rows">
-                <div class="pc-row"><span class="dot"><i class="bi bi-house"></i></span><span class="grow">La Cueva Muebles</span><span class="tag">1/6</span></div>
-                <div class="pc-row"><span class="dot"><i class="bi bi-bag"></i></span><span class="grow">Tiendamia</span><span class="tag">2/12</span></div>
+            <div class="hc-filas">
+                <div class="hc-fila"><span class="hc-icono"><i class="bi bi-house"></i></span><span class="hc-nombre">Heladera</span>@Fmt.ProgresoCuotas(3, 12)<span class="hc-tag">3/12</span></div>
+                <div class="hc-fila"><span class="hc-icono"><i class="bi bi-mortarboard"></i></span><span class="hc-nombre">Curso de inglés</span>@Fmt.ProgresoCuotas(5, 10)<span class="hc-tag">5/10</span></div>
             </div>
         </div>
     </div>
 
-    <div class="auth-foot">Fourvexa · ASP.NET Core MVC</div>
+    <div class="auth-foot">Hecho por Fourvexa</div>
 </section>

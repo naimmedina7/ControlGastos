@@ -10,17 +10,12 @@
 
     <section class="auth-form-side">
         <div class="auth-form">
-            <div class="auth-mobile-logo align-items-center gap-2">
-                <partial name="_Logo" />
-                <span class="brand-name">Mis<span class="dot">·</span><span class="light">Gastos</span></span>
-            </div>
-
             <h2>Iniciar sesión</h2>
             <p class="lead-x">Ingresa con tu correo para ver tus gastos.</p>
 
             <div asp-validation-summary="ModelOnly" class="alert-x err validation-box" role="alert"></div>
 
-            <form method="post" asp-action="Login" novalidate data-validate>
+            <form method="post" asp-controller="Cuenta" asp-action="Login" novalidate data-validate>
                 <input type="hidden" asp-for="ReturnUrl" />
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label">Correo electrónico</label>
@@ -39,16 +34,21 @@
                     </div>
                     <span asp-validation-for="Password" class="field-error"></span>
                 </div>
-                <div class="form-check mb-4">
+                <div class="form-check mb-3">
                     <input asp-for="Recordarme" class="form-check-input" />
                     <label asp-for="Recordarme" class="form-check-label text-2">Mantener la sesión iniciada en este dispositivo</label>
                 </div>
+                @* Sin correo no hay recuperación automática: lo resuelve quien administra la app (docs/10-administracion.md). *@
+                <details class="olvido mb-4">
+                    <summary>¿Olvidaste tu contraseña?</summary>
+                    <p>Pídele una contraseña temporal a quien administra la app. Cuando entres, cámbiala en <strong>Mi perfil</strong>.</p>
+                </details>
                 <button class="btn btn-primary btn-lg w-100" type="submit">Iniciar sesión <i class="bi bi-arrow-right"></i></button>
             </form>
 
             @if (registro)
             {
-                <p class="auth-switch">¿No tienes cuenta? <a asp-action="Registro">Crear una cuenta</a></p>
+                <p class="auth-switch">¿No tienes cuenta? <a asp-controller="Cuenta" asp-action="Registro">Crear una cuenta</a></p>
             }
         </div>
     </section>

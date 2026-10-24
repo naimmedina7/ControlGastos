@@ -20,17 +20,17 @@
 
 <section class="kpi-grid kpi-3" aria-label="Totales de gastos fijos">
     <article class="card-x kpi featured">
-        <div class="kpi-top"><span class="kpi-label">Fijos por mes en pesos</span><span class="kpi-icon"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Fijos por mes en pesos</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(Model.TotalMensual(Moneda.UYU))</div>
         <div class="kpi-meta">activos en @Fmt.MesAnio(mes)</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Fijos por mes en dólares</span><span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Fijos por mes en dólares</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(Model.TotalMensual(Moneda.USD), Moneda.USD)</div>
         <div class="kpi-meta">suscripciones y servicios en USD</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Gastos fijos</span><span class="kpi-icon accent"><i class="bi bi-list-check" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Gastos fijos</span></div>
         <div class="kpi-value">@Model.Activos.Count()</div>
         <div class="kpi-meta">activos · @Model.Lista.Count(r => !r.Activo) en pausa</div>
     </article>
@@ -40,7 +40,7 @@
     @if (Model.Lista.Count == 0)
     {
         <div class="empty">
-            <div class="empty-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <partial name="_VistaVacia" model="@("filas")" />
             <h3>Todavía no tienes gastos fijos</h3>
             <p>Agrega lo que pagas todos los meses y deja de cargarlo a mano.</p>
             <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto fijo</a>
