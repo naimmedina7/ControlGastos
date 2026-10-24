@@ -13,6 +13,7 @@ AppUser (Identity: AspNetUsers)
  │     └─< Cuota      (UserId, GastoId, Numero, Periodo, Monto)
  ├─< TipoCambio       (UserId, Mes único por usuario, UsdEnPesos)   ← ajuste manual
  ├─< Presupuesto      (UserId, CategoriaId, Moneda, MontoMensual; único por categoría y moneda)
+ ├─< Ingreso          (UserId, Descripcion, Tipo, Fecha, Moneda, Monto, Notas?)
  └─< DataProtectionKeys (claves que cifran la cookie; no son por usuario)
 
 CotizacionBcu (Mes PK, UsdEnPesos, Definitiva, ActualizadoEn)   ← dato público, compartido
@@ -83,6 +84,18 @@ Límite mensual (`MontoMensual`) para una categoría en una moneda.
 - El avance del mes suma todo lo que cae en esa categoría y moneda: contado, cuota del mes y gastos fijos.
 - Niveles: **ok** (< 80 %), **cerca** (80–100 %), **excedido** (> 100 %).
 - Si se borra la categoría, se borra su presupuesto (cascada).
+
+### Ingreso
+Plata que entra. Cuenta en el **mes de su fecha** (no hay día de cierre).
+
+| Campo | Notas |
+|---|---|
+| Descripcion | "Sueldo de octubre", "Venta de la bici". |
+| Tipo | `Sueldo`, `Venta`, `PrestamoDevuelto` (plata que prestaste y te devolvieron) u `Otro`. Se guarda como texto. |
+| Fecha | Define el mes. |
+| Moneda, Monto | `UYU` / `USD`; monto mayor a cero, con 2 decimales. |
+
+**Cuánto te queda** = ingresos del mes − gastos del mes (contado, cuota del mes de cada compra y gastos fijos ya cargados), **por moneda**. Lo calcula `IngresoService.Calcular` y se muestra en el inicio y en Ingresos.
 
 ### Cuota
 Una fila por cada mes en que el gasto impacta. **Se regenera completa** cada vez que el gasto se edita.

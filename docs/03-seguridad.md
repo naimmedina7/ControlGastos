@@ -48,7 +48,7 @@ Las **claves de Data Protection se guardan en la base** (`DataProtectionKeys`). 
 
 Funciona en dos capas, en [AppDbContext.cs](../src/ControlGastos.Web/Data/AppDbContext.cs):
 
-1. **Filtro global de consultas.** Cada entidad que implementa `IPerteneceAUsuario` (Tarjeta, Categoria, Gasto, Cuota, GastoRecurrente, TipoCambio, Presupuesto) tiene `HasQueryFilter(x => x.UserId == UsuarioActualId)`. El `UsuarioActualId` sale del claim `NameIdentifier` de la cookie. Toda consulta, incluidos `Include` y `Any`, lleva ese `WHERE`. Sin usuario no se ve nada.
+1. **Filtro global de consultas.** Cada entidad que implementa `IPerteneceAUsuario` (Tarjeta, Categoria, Gasto, Cuota, GastoRecurrente, TipoCambio, Presupuesto, Ingreso) tiene `HasQueryFilter(x => x.UserId == UsuarioActualId)`. El `UsuarioActualId` sale del claim `NameIdentifier` de la cookie. Toda consulta, incluidos `Include` y `Any`, lleva ese `WHERE`. Sin usuario no se ve nada.
 2. **Control al guardar.** `SaveChanges` asigna el `UserId` a las filas nuevas y **lanza una excepción** si se intenta crear, modificar o borrar una fila de otro usuario, aunque alguien saltee el filtro adjuntando la entidad a mano.
 
 Además:

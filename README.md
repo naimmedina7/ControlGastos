@@ -1,6 +1,6 @@
 # Mis·Gastos
 
-Aplicación web de control de gastos personales: tarjetas, compras en cuotas, pesos y dólares. Cada usuario ve **solo sus datos**: las cuentas están aisladas entre sí, las contraseñas se guardan con hash y todas las rutas son privadas salvo la portada, el login y el registro.
+Aplicación web de control de gastos personales: tarjetas, compras en cuotas, pesos y dólares. Cada usuario ve **solo sus datos**: las cuentas están aisladas entre sí, las contraseñas se guardan con hash y todas las rutas son privadas salvo la portada (que es el login) y el registro.
 
 Hecha con ASP.NET Core MVC (.NET 10), EF Core e Identity. El diseño se reutilizó de [gastos-equipos](../gastos-equipos/README.md).
 
@@ -13,7 +13,9 @@ Hecha con ASP.NET Core MVC (.NET 10), EF Core e Identity. El diseño se reutiliz
 | 2 · Uso rápido | Gastos fijos, día de cierre, carga rápida, filtros, cuotas pendientes | ✅ Hecha |
 | 3 · Dashboards | Reportes con gráficos por mes, tipo, categoría y medio de pago; exportar CSV | ✅ Hecha |
 | 4 · Comodidad | Importar estado de cuenta, tipo de cambio, presupuestos | ✅ Hecha |
-| 5 · Publicación y respaldos | Revisión de seguridad, cotización automática del BCU, respaldo y restauración, comandos de administración, app instalable, `Dockerfile.vercel` | ✅ Hecha (falta el primer deploy) |
+| 5 · Publicación y respaldos | Revisión de seguridad, cotización automática del BCU, respaldo y restauración, comandos de administración, app instalable, `Dockerfile.vercel` | ✅ Hecha |
+| Rediseño visual | Sistema de diseño con tokens, accesibilidad (contraste, 12 px, 44 px), panel en bento, acceso renovado | ✅ Hecho |
+| Ingresos | Ingresos por mes, "cuánto te queda" en el inicio, gráfica circular por categoría | ✅ Hecho |
 
 El detalle está en [docs/07-hoja-de-ruta.md](docs/07-hoja-de-ruta.md).
 
@@ -47,17 +49,19 @@ dotnet test
 | [08 · Decisiones](docs/08-decisiones.md) | Por qué se eligió cada cosa |
 | [09 · Guía de uso](docs/09-guia-de-uso.md) | Cómo importar el estado de cuenta, cargar cuotas y gastos fijos, y usar reportes y presupuestos |
 | [10 · Administración](docs/10-administracion.md) | Contraseñas olvidadas, respaldos, cotizaciones y app instalable |
+| [11 · Diseño](docs/11-diseno.md) | Colores, tipografía, componentes y cómo se verificó la accesibilidad |
 
 ## Estructura
 
 ```
 control-gastos/
 ├── src/ControlGastos.Web/       App MVC (dominio, datos, servicios, controladores, vistas)
-├── tests/ControlGastos.Tests/   xUnit: cuotas, gastos fijos, aislamiento y seguridad HTTP (168 tests)
+├── tests/ControlGastos.Tests/   xUnit: cuotas, gastos fijos, ingresos, aislamiento, diseño y seguridad HTTP (203 tests)
 ├── docs/                        Documentación
 ├── Dockerfile                   Imagen de producción (Render, Docker local)
 ├── Dockerfile.vercel            Imagen para Vercel (Container Runtime)
 ├── tools/generar_iconos.py      Íconos de la app instalable
+├── tools/generar_og.py          Imagen para compartir el link (Open Graph)
 ├── render.yaml                  Blueprint para Render
 └── dotnet-tools.json            dotnet-ef como herramienta local
 ```

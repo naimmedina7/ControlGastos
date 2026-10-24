@@ -60,7 +60,7 @@
 - [x] Revisión de seguridad previa al despliegue (ver [03-seguridad.md](03-seguridad.md#revisión-previa-al-despliegue-octubre-2026)): ReDoS corregido, registro restringido por lista de correos, hash más fuerte, sesiones revalidadas cada 5 minutos.
 - [x] Soporte de la variable `PORT` para Vercel.
 - [x] `Dockerfile.vercel`.
-- [ ] Primer deploy en Vercel con Neon (lo hace el usuario; guía en [05-despliegue.md](05-despliegue.md)).
+- [x] Primer deploy en Vercel con Neon (guía en [05-despliegue.md](05-despliegue.md)).
 - [x] **Respaldos**: descarga de los datos propios desde el perfil y restauración validada, en una transacción.
 - [x] **Cotización automática del dólar** (BCU vía Frankfurter, sin clave), con ajuste manual opcional.
 - [x] Comandos de administración: `usuarios`, `reset-password`, `desbloquear`.
@@ -69,7 +69,23 @@
 - 168 tests.
 - Fuera de alcance por decisión: verificación en dos pasos y confirmación por email.
 
+## ✅ Rediseño visual (octubre 2026)
+- [x] Fase 1: correcciones de UX y accesibilidad (contraste, 12 px mínimo, áreas táctiles de 44 px, tablas apiladas en el celular, filtros plegados en Reportes, imagen para compartir el link).
+- [x] Fase 2: sistema visual con tokens, Bricolage Grotesque, verde tinta y ámbar para cuotas.
+- [x] Fase 3: panel en bento, cuotas por segmentos, estados vacíos con vista previa, "Más detalles" en el gasto, animación mínima.
+- [x] Fase 4: la portada es el login, pitch compacto en el celular, tarjeta de ejemplo, requisitos de contraseña en vivo.
+- Detalle en [11-diseno.md](11-diseno.md).
+
+## ✅ Ingresos y gráfica por categoría (octubre 2026)
+- [x] **Ingresos**: sueldo, ventas, préstamos devueltos u otros, por mes y moneda.
+- [x] **Cuánto te queda** en el inicio y en Ingresos: ingresos del mes − gastos del mes, por moneda.
+- [x] **Gráfica circular por categoría** en Gastos del mes y Reportes, con porcentajes, leyenda y tooltip.
+- [x] Respaldo versión 2 (con ingresos), compatible con los de la versión 1.
+- 203 tests.
+
 ## Ideas para después
+- **Ingresos fijos**: un sueldo que se cargue solo cada mes, como los gastos fijos.
+- Ingresos y "cuánto te queda" en Reportes (evolución mes a mes).
 - Registrar los pagos de la tarjeta para conciliar lo pagado contra lo gastado.
 - Importar desde PDF o desde el CSV del banco, además de texto pegado.
 - Modo oscuro (los tokens de color ya están centralizados en `:root`).

@@ -51,6 +51,7 @@ dotnet ef migrations add NombreDelCambio --project src/ControlGastos.Web --conte
 - `dotnet-ef` está fijado en `dotnet-tools.json`, así que no hace falta instalarlo global.
 - Las fábricas de [FabricasDeDiseno.cs](../src/ControlGastos.Web/Data/FabricasDeDiseno.cs) permiten generar las migraciones sin conectarse a ninguna base.
 - Después de generar, borrar el `design.db` que pueda quedar en `src/ControlGastos.Web`.
+- Si Visual Studio tiene la app abierta, bloquea la compilación en Debug: agregar `--configuration Release` al comando.
 
 Migraciones actuales (en los dos motores):
 
@@ -60,6 +61,7 @@ Migraciones actuales (en los dos motores):
 | `Etapa2GastosFijos` | Tabla `GastosRecurrentes`, `Gastos.GastoRecurrenteId`, `Tarjetas.DiaCierre` |
 | `Etapa4TipoCambioPresupuestos` | Tablas `TiposCambio` y `Presupuestos` |
 | `Etapa5CotizacionesBcu` | Tabla `CotizacionesBcu` (compartida) |
+| `Ingresos` | Tabla `Ingresos` (por usuario, índice por usuario y fecha) |
 
 > En SQLite, `Etapa2GastosFijos` reconstruye la tabla `Gastos` para agregar la FK, y EF avisa que esa parte no corre dentro de una transacción. Es normal. Se probó la actualización de una base de la etapa 1 con datos: se conservaron los gastos y la sesión. `Etapa4TipoCambioPresupuestos` también se aplicó sobre una base existente de la etapa 2.
 

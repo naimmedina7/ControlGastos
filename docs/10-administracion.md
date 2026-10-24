@@ -34,7 +34,7 @@ Implementación: [ComandosAdmin.cs](../src/ControlGastos.Web/Infrastructure/Coma
 Hay dos capas, las dos gratuitas:
 
 1. **Respaldo propio de cada usuario** (en la app): *Mi perfil → Descargar respaldo* baja un `.json` con todos tus datos:
-   - Incluye gastos (con su plan de cuotas), gastos fijos, tarjetas, categorías, presupuestos y ajustes manuales de cotización.
+   - Incluye gastos (con su plan de cuotas), gastos fijos, ingresos, tarjetas, categorías, presupuestos y ajustes manuales de cotización.
    - No incluye la contraseña ni datos de otros usuarios.
    - Conviene descargarlo una vez por mes, o antes de una importación grande, y guardarlo en tu Drive.
 2. **Historial de Neon**: Neon permite restaurar la base a un momento anterior dentro de su ventana de historial. En el plan gratuito esa ventana es corta (revisar el valor actual en Neon). Sirve para un error reciente, no como archivo de largo plazo.
@@ -50,7 +50,7 @@ Hay dos capas, las dos gratuitas:
 - Las cuotas se recalculan a partir de cada gasto. Los gastos fijos conservan hasta qué mes se generaron, así que no se duplican meses.
 - Límite: 4 MB por archivo (Vercel acepta hasta unos 4,5 MB por request). Equivale a varios miles de gastos.
 
-Formato: JSON con `app: "Mis·Gastos"` y `version: 1`. Los ids del archivo son referencias internas y al restaurar se crean filas nuevas. Detalle en [RespaldoService.cs](../src/ControlGastos.Web/Services/RespaldoService.cs).
+Formato: JSON con `app: "Mis·Gastos"` y `version: 2` (la 2 agrega `ingresos`; los archivos de la versión 1 se siguen pudiendo restaurar, sin ingresos). Los ids del archivo son referencias internas y al restaurar se crean filas nuevas. Detalle en [RespaldoService.cs](../src/ControlGastos.Web/Services/RespaldoService.cs).
 
 ## Cotizaciones del dólar
 
