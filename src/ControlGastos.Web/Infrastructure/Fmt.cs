@@ -70,17 +70,34 @@ public static class Fmt
     public static IHtmlContent Punto(string? color) =>
         new HtmlString($"<span class=\"dot-color\" style=\"background:{WebUtility.HtmlEncode(ColorSeguro(color))}\" aria-hidden=\"true\"></span>");
 
-    public static IHtmlContent IconoCategoria(Categoria? c, string extra = "")
-    {
-        string icono = c?.Icono ?? "bi-question-circle";
-        string color = ColorSeguro(c?.Color ?? "#94a3b8");
-        return new HtmlString($"<span class=\"cat-icon {extra}\" style=\"color:{color};background:{color}1a\" aria-hidden=\"true\"><i class=\"bi {WebUtility.HtmlEncode(icono)}\"></i></span>");
-    }
+    /// <summary>Color de "Sin categoría": gris pizarra (el blanco encima da 4,8:1).</summary>
+    public const string ColorSinCategoria = "#64748b";
+
+    /// <summary>Ícono de categoría: fondo sólido con su color e ícono blanco.</summary>
+    public static IHtmlContent IconoCategoria(Categoria? c, string extra = "") =>
+        IconoGrupo(c?.Icono ?? "bi-question-circle", c?.Color ?? ColorSinCategoria, extra);
 
     public static IHtmlContent IconoGrupo(string? icono, string color, string extra = "")
     {
         color = ColorSeguro(color);
-        return new HtmlString($"<span class=\"cat-icon {extra}\" style=\"color:{color};background:{color}1a\" aria-hidden=\"true\"><i class=\"bi {WebUtility.HtmlEncode(icono ?? "bi-credit-card")}\"></i></span>");
+        return new HtmlString($"<span class=\"cat-icon {extra}\" style=\"background:{color};color:{ColorIconoSobre(color)}\" aria-hidden=\"true\"><i class=\"bi {WebUtility.HtmlEncode(icono ?? "bi-credit-card")}\"></i></span>");
+    }
+
+    /// <summary>Blanco sobre el color, salvo que no llegue a 3:1 (colores claros de un respaldo): ahí, verde tinta.</summary>
+    public static string ColorIconoSobre(string color)
+    {
+        double l = Luminancia(ColorSeguro(color));
+        return 1.05 / (l + 0.05) >= 3 ? "#fff" : "#14221c";
+    }
+
+    private static double Luminancia(string hex)
+    {
+        double Canal(int i)
+        {
+            double v = Convert.ToInt32(hex.Substring(i, 2), 16) / 255.0;
+            return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
+        }
+        return 0.2126 * Canal(1) + 0.7152 * Canal(3) + 0.0722 * Canal(5);
     }
 
     public static bool EsColorValido(string? c) =>

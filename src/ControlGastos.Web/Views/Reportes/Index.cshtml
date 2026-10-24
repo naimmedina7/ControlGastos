@@ -11,7 +11,7 @@
     // Categorías: las 7 principales y el resto en "Otras" (nunca más de 8 barras).
     var cats = r.PorCategoria.Take(7).ToList();
     var resto = r.PorCategoria.Skip(7).ToList();
-    if (resto.Count > 0) cats.Add(new TotalGrupo($"Otras ({resto.Count})", "#94a3b8", "bi-three-dots", resto.Sum(x => x.Total), resto.Sum(x => x.Cantidad)));
+    if (resto.Count > 0) cats.Add(new TotalGrupo($"Otras ({resto.Count})", "#64748b", "bi-three-dots", resto.Sum(x => x.Total), resto.Sum(x => x.Cantidad)));
 
     string datosMeses = System.Text.Json.JsonSerializer.Serialize(new
     {
@@ -90,17 +90,17 @@ else if (r.Vista == VistaMoneda.Pesificado)
 
 <section class="kpi-grid" aria-label="Resumen del período">
     <article class="card-x kpi featured">
-        <div class="kpi-top"><span class="kpi-label">Total del período</span><span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Total del período</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Total, mon)</div>
         <div class="kpi-meta">@periodo</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Promedio mensual</span><span class="kpi-icon accent"><i class="bi bi-bar-chart" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Promedio mensual</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Promedio, mon)</div>
         <div class="kpi-meta">@r.MesesConDatos mes(es) desde el primer gasto del período</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Mes más alto</span><span class="kpi-icon accent"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Mes más alto</span></div>
         @if (r.MesMaximo is SerieMes max)
         {
             <div class="kpi-value text">@Fmt.MesAnioCap(max.Mes)</div>
@@ -112,7 +112,7 @@ else if (r.Vista == VistaMoneda.Pesificado)
         }
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Categoría principal</span><span class="kpi-icon accent"><i class="bi bi-tags" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Categoría principal</span></div>
         @if (r.CategoriaPrincipal is TotalGrupo top)
         {
             <div class="kpi-value text">@top.Nombre</div>

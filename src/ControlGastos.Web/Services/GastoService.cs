@@ -159,7 +159,7 @@ public class GastoService(AppDbContext db)
             lineas.GroupBy(l => l.Gasto.Moneda).ToDictionary(g => g.Key, g => g.Sum(l => l.Monto)),
             futuras.GroupBy(f => f.Moneda).ToDictionary(g => g.Key, g => g.Sum(f => f.Monto)),
             Agrupar(lineas, l => l.Gasto.Tarjeta?.Nombre ?? "Efectivo / transferencia", l => l.Gasto.Tarjeta?.Color ?? "#64748b", l => null),
-            Agrupar(lineas, l => l.Gasto.Categoria?.Nombre ?? "Sin categoría", l => l.Gasto.Categoria?.Color ?? "#94a3b8", l => l.Gasto.Categoria?.Icono ?? "bi-question-circle"));
+            Agrupar(lineas, l => l.Gasto.Categoria?.Nombre ?? "Sin categoría", l => l.Gasto.Categoria?.Color ?? "#64748b", l => l.Gasto.Categoria?.Icono ?? "bi-question-circle"));
     }
 
     private static List<TotalPorGrupo> Agrupar(List<LineaDelMes> lineas, Func<LineaDelMes, string> nombre, Func<LineaDelMes, string> color, Func<LineaDelMes, string?> icono) =>

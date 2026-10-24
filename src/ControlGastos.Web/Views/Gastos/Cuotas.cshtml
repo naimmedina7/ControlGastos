@@ -15,17 +15,17 @@
 
 <section class="kpi-grid kpi-3" aria-label="Resumen de cuotas">
     <article class="card-x kpi featured">
-        <div class="kpi-top"><span class="kpi-label">Falta pagar en pesos</span><span class="kpi-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Falta pagar en pesos</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(Model.Saldo(Moneda.UYU))</div>
         <div class="kpi-meta">incluye la cuota de @Fmt.MesAnio(Model.Mes)</div>
     </article>
     <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Falta pagar en dólares</span><span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span></div>
+        <div class="kpi-top"><span class="kpi-label">Falta pagar en dólares</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(Model.Saldo(Moneda.USD), Moneda.USD)</div>
         <div class="kpi-meta">@Model.Planes.Count(p => p.Gasto.Moneda == Moneda.USD) plan(es)</div>
     </article>
-    <article class="card-x kpi">
-        <div class="kpi-top"><span class="kpi-label">Cuotas de este mes</span><span class="kpi-icon accent"><i class="bi bi-calendar2-range" aria-hidden="true"></i></span></div>
+    <article class="card-x kpi kpi-cuotas">
+        <div class="kpi-top"><span class="kpi-label">Cuotas de este mes</span></div>
         <div class="kpi-value">@Fmt.MoneyHtml(Model.CuotaDelMes(Moneda.UYU))</div>
         <div class="kpi-meta">
             <span>@Model.Planes.Count plan(es) activos</span>

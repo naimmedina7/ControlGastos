@@ -3,7 +3,7 @@
 // Solo se guardan archivos estáticos (estilos, scripts, íconos) y una página "sin conexión".
 "use strict";
 
-const VERSION = "mis-gastos-v4"; // subir al cambiar site.js o site.css
+const VERSION = "mis-gastos-v5"; // subir al cambiar site.js o site.css
 const PRECARGA = [
   "/offline.html",
   "/css/site.css",
@@ -12,7 +12,7 @@ const PRECARGA = [
   "/lib/bootstrap/dist/js/bootstrap.bundle.min.js",
   "/icons/icon-192.png",
 ];
-const ESTATICOS = /^\/(css|js|lib|icons)\//;
+const ESTATICOS = /^\/(css|js|lib|icons|fonts)\//;
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(PRECARGA)).then(() => self.skipWaiting()));

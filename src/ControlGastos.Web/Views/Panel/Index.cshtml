@@ -32,8 +32,7 @@
 <section class="kpi-grid" aria-label="Indicadores del mes">
     <article class="card-x kpi featured">
         <div class="kpi-top">
-            <span class="kpi-label">Total del mes en pesos</span>
-            <span class="kpi-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+            <span class="kpi-label">Total del mes en pesos</span>
         </div>
         <div class="kpi-value">@Fmt.MoneyHtml(uyu)</div>
         <div class="kpi-meta">
@@ -51,17 +50,15 @@
 
     <article class="card-x kpi">
         <div class="kpi-top">
-            <span class="kpi-label">Total del mes en dólares</span>
-            <span class="kpi-icon accent"><i class="bi bi-currency-dollar" aria-hidden="true"></i></span>
+            <span class="kpi-label">Total del mes en dólares</span>
         </div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Total(Moneda.USD), Moneda.USD)</div>
         <div class="kpi-meta">@r.Lineas.Count(l => l.Gasto.Moneda == Moneda.USD) gasto(s) en USD</div>
     </article>
 
-    <article class="card-x kpi">
+    <article class="card-x kpi kpi-cuotas">
         <div class="kpi-top">
-            <span class="kpi-label">Cuotas este mes</span>
-            <span class="kpi-icon accent"><i class="bi bi-calendar2-range" aria-hidden="true"></i></span>
+            <span class="kpi-label">Cuotas este mes</span>
         </div>
         <div class="kpi-value">@r.EnCuotas</div>
         <div class="kpi-meta">
@@ -72,8 +69,7 @@
 
     <article class="card-x kpi">
         <div class="kpi-top">
-            <span class="kpi-label">Comprometido a futuro</span>
-            <span class="kpi-icon accent"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+            <span class="kpi-label">Comprometido a futuro</span>
         </div>
         <div class="kpi-value">@Fmt.MoneyHtml(r.Pendiente(Moneda.UYU))</div>
         <div class="kpi-meta">

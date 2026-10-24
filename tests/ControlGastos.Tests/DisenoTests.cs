@@ -51,4 +51,44 @@ public class DisenoTests(AppFactory factory) : IClassFixture<AppFactory>
         Assert.Empty(menores);
         Assert.DoesNotContain("html { font-size: 14.5px; }", css);
     }
+
+    // ---------- Fase 2 ----------
+
+    [Fact]
+    public async Task La_tipografia_de_marca_esta_alojada_en_el_sitio_y_se_precarga()
+    {
+        string html = await factory.Cliente().GetStringAsync("/cuenta/login");
+        Assert.Contains("<link rel=\"preload\" href=\"/fonts/bricolage-grotesque-latin.woff2\" as=\"font\" type=\"font/woff2\" crossorigin", html);
+        var fuente = await factory.Cliente().GetAsync("/fonts/bricolage-grotesque-latin.woff2");
+        Assert.Equal(HttpStatusCode.OK, fuente.StatusCode);
+        string css = await factory.Cliente().GetStringAsync("/css/site.css");
+        Assert.Contains("font-variant-numeric: tabular-nums", css); // cifras alineadas en tablas y totales
+    }
+
+    [Fact]
+    public async Task Los_tokens_de_color_son_los_del_sistema_nuevo()
+    {
+        string css = await factory.Cliente().GetStringAsync("/css/site.css");
+        string root = css[css.IndexOf(":root {", StringComparison.Ordinal)..];
+        root = root[..root.IndexOf('}')];
+        foreach (var token in new[] { "--bg: #f6f4ef", "--ink: #0b1f1a", "--accent: #047857", "--mint: #6ee7b7", "--amber: #fbbf24", "--amber-ink: #b45309", "--r-ctrl: 12px", "--r-card: 20px" })
+            Assert.Contains(token, root);
+        // La paleta de los gráficos no se toca: está validada para daltonismo.
+        foreach (var serie in new[] { "--series-1: #2a78d6", "--series-2: #eb6834", "--series-3: #1baf7a" })
+            Assert.Contains(serie, root);
+        Assert.DoesNotContain("radial-gradient", css); // tarjeta principal plana, sin brillos
+    }
+
+    [Theory]
+    [InlineData("#16a34a", "#fff")]   // paleta de categorías: tonos medios, ícono blanco
+    [InlineData("#ea580c", "#fff")]
+    [InlineData("#64748b", "#fff")]
+    [InlineData("#fde68a", "#14221c")] // color claro (de un respaldo): ícono oscuro
+    [InlineData("#ffffff", "#14221c")]
+    public void El_icono_de_categoria_siempre_contrasta_con_su_fondo(string fondo, string icono)
+    {
+        Assert.Equal(icono, ControlGastos.Web.Infrastructure.Fmt.ColorIconoSobre(fondo));
+        string html = ControlGastos.Web.Infrastructure.Fmt.IconoGrupo("bi-cart", fondo).ToString()!;
+        Assert.Contains($"style=\"background:{fondo};color:{icono}\"", html);
+    }
 }
