@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-154 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
+168 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
 
 ## Qué cubren
 
@@ -126,6 +126,15 @@ dotnet test
   - Las páginas enlazan el manifest.
   - El service worker solo guarda estáticos.
 
+### `ConexionTests` y `FechasUtcTests`: problemas del primer deploy
+- La conexión se lee de `DATABASE_URL` con el formato de Neon, de los nombres alternativos de la integración (`POSTGRES_URL`, *unpooled*, con prefijo) o de `ConnectionStrings__Default` como URL. Si falta, el error lista solo los nombres de las variables.
+- Todas las fechas se guardan en UTC: el modelo de PostgreSQL aplica el conversor a cada `DateTime`, y un respaldo con fechas sin zona (exportado desde SQLite) se restaura bien.
+
+### `IndicadorCargaTests`
+- Las páginas públicas y privadas incluyen la barra de carga y el aviso accesible.
+- Los enlaces de descarga (respaldo, CSV) no activan la barra.
+- El script bloquea el segundo envío sin deshabilitar el botón.
+
 ## Cómo agregar un test HTTP
 
 ```csharp
@@ -206,3 +215,12 @@ Con la cuenta de prueba en el navegador:
 - Correcciones durante la verificación:
   - En desarrollo, la variable `PORT` hacía escuchar en `0.0.0.0` (toda la red local). Ahora solo se usa fuera de desarrollo.
   - La hora de "Última consulta" pasó a mostrarse en la zona de la app (en Vercel el servidor está en UTC).
+
+## Verificación manual hecha (indicador de carga)
+
+- **Nuevo gasto**: al enviar, el botón cambia el ícono por la ruedita y queda ocupado (`aria-busy`). Un segundo envío inmediato se bloquea y queda **un solo gasto**.
+- **"Guardar y cargar otro"** sigue funcionando: vuelve a `nuevo?tarjeta=…&fecha=…`.
+- **Eliminar**: el ícono de la papelera pasa a ruedita.
+- **Navegación**: la barra no aparece a los 100 ms y sí a los 350 ms, con "Cargando…" para lectores de pantalla. El enlace de descarga del CSV no la activa.
+- Con "reducir movimiento" activado en el sistema, la barra queda fija y la ruedita gira lento.
+

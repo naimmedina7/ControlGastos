@@ -45,6 +45,7 @@ Cómo encaja esta app:
 |---|---|
 | `Falta la cadena de conexión…` y luego `exited with code 139` | La app no ve la variable de la base. Revisar en **Storage** que Neon esté conectado a este proyecto **con Production marcado**, y en **Settings → Environment Variables** que exista `DATABASE_URL` (o `POSTGRES_URL`). Después hacer **Redeploy**: Vercel solo entrega variables nuevas a deploys nuevos. El mensaje lista los nombres de las variables de base que sí encontró. |
 | `502` sin errores de la app | Falta `PORT=8080` en las variables del proyecto. |
+| `Cannot write DateTime with Kind=Unspecified…` | Corregido: todas las fechas se convierten a UTC antes de guardarse (PostgreSQL no acepta fechas sin zona, que llegaban en respaldos exportados desde SQLite). |
 
 La app acepta `DATABASE_URL`, `POSTGRES_URL`, `DATABASE_URL_UNPOOLED`, `POSTGRES_URL_NON_POOLING`, cualquier variable terminada en `_DATABASE_URL` o `_POSTGRES_URL` (integraciones con prefijo), y `ConnectionStrings__Default` en formato Npgsql o URL.
 

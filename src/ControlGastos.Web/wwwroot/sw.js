@@ -3,7 +3,7 @@
 // Solo se guardan archivos estáticos (estilos, scripts, íconos) y una página "sin conexión".
 "use strict";
 
-const VERSION = "mis-gastos-v1";
+const VERSION = "mis-gastos-v2"; // subir al cambiar site.js o site.css
 const PRECARGA = [
   "/offline.html",
   "/css/site.css",

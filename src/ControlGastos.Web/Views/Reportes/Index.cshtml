@@ -35,7 +35,7 @@
         <p>Cómo evoluciona tu gasto, en qué se va y con qué lo pagas.</p>
     </div>
     <div class="page-actions">
-        <a class="btn btn-light" asp-action="Exportar" asp-route-desde="@Fmt.MesParam(r.Desde)" asp-route-hasta="@Fmt.MesParam(r.Hasta < r.MesActual ? r.Hasta : r.MesActual)"><i class="bi bi-download"></i>Exportar CSV</a>
+        <a class="btn btn-light" asp-action="Exportar" asp-route-desde="@Fmt.MesParam(r.Desde)" asp-route-hasta="@Fmt.MesParam(r.Hasta < r.MesActual ? r.Hasta : r.MesActual)" download data-sin-carga><i class="bi bi-download"></i>Exportar CSV</a>
     </div>
 </div>
 

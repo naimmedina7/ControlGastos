@@ -185,6 +185,12 @@ public class CuentaController(
         {
             TempData["Error"] = ex.Message + " No se modificó nada.";
         }
+        catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException or InvalidCastException or ArgumentException)
+        {
+            // La restauración corre en una transacción: si algo falla, se deshace completa.
+            logger.LogError(ex, "Error al restaurar el respaldo de {UserId}", user.Id);
+            TempData["Error"] = "No se pudo restaurar el respaldo por un error inesperado. No se modificó nada; tus datos siguen como estaban.";
+        }
         return RedirectToAction(nameof(Perfil));
     }
 

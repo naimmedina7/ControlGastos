@@ -299,4 +299,71 @@
     if (botonInstalar) botonInstalar.hidden = true;
     if (avisoInstalada) avisoInstalada.hidden = false;
   });
+
+  // ---------- Indicador de carga ----------
+  // Al enviar un formulario: el botón muestra una ruedita y no acepta un segundo clic (evita gastos duplicados).
+  // Al navegar: barra fina arriba, solo si la página tarda más de 250 ms (así no parpadea en cargas rápidas).
+  var raiz = document.documentElement;
+  var estado = document.querySelector("[data-carga-estado]");
+  var temporizador = null;
+
+  function mostrarCarga() {
+    clearTimeout(temporizador);
+    temporizador = setTimeout(function () {
+      raiz.classList.add("cargando");
+      if (estado) estado.textContent = "Cargando…";
+    }, 250);
+  }
+
+  function ocultarCarga() {
+    clearTimeout(temporizador);
+    raiz.classList.remove("cargando");
+    if (estado) estado.textContent = "";
+    document.querySelectorAll("form[data-enviando]").forEach(function (f) { delete f.dataset.enviando; });
+    document.querySelectorAll(".btn-cargando").forEach(function (b) {
+      if (b.dataset.htmlOriginal != null) b.innerHTML = b.dataset.htmlOriginal;
+      b.classList.remove("btn-cargando");
+      b.removeAttribute("aria-busy");
+      delete b.dataset.htmlOriginal;
+    });
+  }
+
+  // Se registra en document (fase de burbuja): corre después de la validación y de los data-confirm,
+  // así que si alguno canceló el envío (defaultPrevented) no se muestra nada.
+  document.addEventListener("submit", function (e) {
+    if (e.defaultPrevented) return;
+    var form = e.target;
+    if (form.dataset.enviando) { e.preventDefault(); return; }   // segundo clic mientras se envía
+    form.dataset.enviando = "1";
+
+    var boton = e.submitter || form.querySelector("[type=submit]");
+    if (boton && boton.matches("button")) {
+      // No se usa "disabled": el navegador dejaría de enviar el valor del botón (por ejemplo "Guardar y cargar otro").
+      boton.dataset.htmlOriginal = boton.innerHTML;
+      boton.classList.add("btn-cargando");
+      boton.setAttribute("aria-busy", "true");
+      var spinner = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>';
+      var texto = boton.dataset.textoCarga;
+      if (boton.classList.contains("btn-icon")) boton.innerHTML = spinner;
+      else if (texto) boton.innerHTML = spinner + "<span>" + texto + "</span>";
+      else {
+        var icono = boton.querySelector("i.bi");
+        if (icono) icono.outerHTML = spinner; else boton.insertAdjacentHTML("afterbegin", spinner);
+      }
+    }
+    mostrarCarga();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest("a[href]");
+    if (!a || a.target === "_blank" || a.hasAttribute("download") || a.hasAttribute("data-sin-carga")) return;
+    var url = new URL(a.href, location.href);
+    if (url.origin !== location.origin) return;
+    if (url.pathname === location.pathname && url.search === location.search) return; // anclas en la misma página
+    mostrarCarga();
+  });
+
+  // Al volver con el botón "atrás" el navegador puede restaurar la página tal como quedó: se limpia el estado.
+  window.addEventListener("pageshow", ocultarCarga);
 })();

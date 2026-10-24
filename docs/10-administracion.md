@@ -46,6 +46,7 @@ Hay dos capas, las dos gratuitas:
 - **Reemplaza todos tus datos** por los del archivo. No toca los de otros usuarios.
 - El archivo se valida completo antes de cambiar nada. Si tiene un error (otra app, otra versión, campos de más, referencias rotas, montos inválidos, colores o íconos fuera de formato), no se modifica nada y se explica el problema.
 - Se guarda todo en **una transacción**: o se restaura completo o no se restaura nada.
+- Se puede restaurar en producción un respaldo descargado de la versión local, y al revés: las fechas se normalizan a UTC.
 - Las cuotas se recalculan a partir de cada gasto. Los gastos fijos conservan hasta qué mes se generaron, así que no se duplican meses.
 - Límite: 4 MB por archivo (Vercel acepta hasta unos 4,5 MB por request). Equivale a varios miles de gastos.
 

@@ -42,7 +42,7 @@
                 <div class="form-hint">Vacío = se deduce de las fechas.</div>
             </div>
             <div class="col-md-3 d-grid">
-                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i>@(a == null ? "Analizar" : "Volver a analizar")</button>
+                <button class="btn btn-primary" type="submit" data-texto-carga="Analizando…"><i class="bi bi-search"></i>@(a == null ? "Analizar" : "Volver a analizar")</button>
             </div>
         </div>
     </div>
@@ -145,7 +145,7 @@
             </div>
             <div class="form-actions">
                 <a class="btn btn-ghost" asp-action="Index">Cancelar</a>
-                <button class="btn btn-primary" type="submit"><i class="bi bi-check2-all"></i>Importar seleccionados</button>
+                <button class="btn btn-primary" type="submit" data-texto-carga="Importando…"><i class="bi bi-check2-all"></i>Importar seleccionados</button>
             </div>
         </form>
     }

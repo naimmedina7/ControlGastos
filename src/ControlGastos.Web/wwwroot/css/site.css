@@ -904,3 +904,23 @@ a:hover { color: var(--accent-700); }
   .topbar { padding-top: env(safe-area-inset-top); }
   .fab { bottom: calc(22px + env(safe-area-inset-bottom)); }
 }
+
+/* ---------- Indicador de carga ---------- */
+.carga-barra {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 2000; pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 35%, var(--accent-600) 65%, transparent 100%);
+  background-size: 50% 100%; background-repeat: no-repeat;
+  opacity: 0; transition: opacity .15s;
+}
+.cargando .carga-barra { opacity: 1; animation: carga-avance 1.1s ease-in-out infinite; }
+@keyframes carga-avance { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+.cargando, .cargando * { cursor: progress; }
+/* Botón enviando: se ve ocupado y no responde a otro clic */
+.btn-cargando { pointer-events: none; opacity: .75; }
+.btn-cargando .spinner-border { width: .95rem; height: .95rem; border-width: .14em; vertical-align: -2px; }
+.btn-icon.btn-cargando .spinner-border { width: .9rem; height: .9rem; }
+@media (prefers-reduced-motion: reduce) {
+  /* Sin animación: la barra queda fija y la ruedita gira lento. */
+  .cargando .carga-barra { animation: none !important; background: var(--accent); }
+  .btn-cargando .spinner-border { animation: spinner-border 2s linear infinite !important; }
+}

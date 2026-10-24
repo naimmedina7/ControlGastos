@@ -73,7 +73,7 @@
             </div>
         </div>
         <div class="card-body-x">
-            <a class="btn btn-primary" asp-action="DescargarRespaldo"><i class="bi bi-download"></i>Descargar respaldo</a>
+            <a class="btn btn-primary" asp-action="DescargarRespaldo" download data-sin-carga><i class="bi bi-download"></i>Descargar respaldo</a>
             <p class="form-hint mt-2">Guárdalo en un lugar seguro (por ejemplo, tu Drive). Contiene tus datos financieros: no lo compartas.</p>
 
             <details class="restore-box mt-4">
@@ -96,7 +96,7 @@
                         <input class="form-check-input" type="checkbox" id="confirmo" name="confirmo" value="true" required />
                         <label class="form-check-label" for="confirmo">Entiendo que mis datos actuales se reemplazan</label>
                     </div>
-                    <button type="submit" class="btn btn-soft-danger"><i class="bi bi-arrow-counterclockwise"></i>Restaurar</button>
+                    <button type="submit" class="btn btn-soft-danger" data-texto-carga="Restaurando…"><i class="bi bi-arrow-counterclockwise"></i>Restaurar</button>
                 </form>
             </details>
         </div>

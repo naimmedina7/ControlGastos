@@ -21,7 +21,7 @@
     </div>
     <div class="page-actions">
         <a class="btn btn-light" asp-controller="Importar" asp-action="Index" title="Importar estado de cuenta"><i class="bi bi-clipboard-plus"></i><span class="hide-sm">Importar</span></a>
-        <a class="btn btn-light" asp-controller="Reportes" asp-action="Exportar" asp-route-desde="@Fmt.MesParam(Model.Mes)" asp-route-hasta="@Fmt.MesParam(Model.Mes)" title="Descargar CSV del mes"><i class="bi bi-download"></i><span class="hide-sm">CSV</span></a>
+        <a class="btn btn-light" asp-controller="Reportes" asp-action="Exportar" asp-route-desde="@Fmt.MesParam(Model.Mes)" asp-route-hasta="@Fmt.MesParam(Model.Mes)" title="Descargar CSV del mes" download data-sin-carga><i class="bi bi-download"></i><span class="hide-sm">CSV</span></a>
         <partial name="_MesNav" model="Model.Mes" />
     </div>
 </div>

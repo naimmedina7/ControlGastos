@@ -67,6 +67,7 @@ Migraciones actuales (en los dos motores):
 
 - **Idioma**: el código de dominio, la UI y los mensajes están en español; los nombres técnicos del framework, en inglés.
 - **Montos**: siempre `decimal`. El formato visible pasa por `Fmt.Money(valor, moneda)` y queda como `$ 1.234,56` o `US$ 12,34`.
+- **Fechas con hora**: siempre `DateTime.UtcNow`. Un conversor en `AppDbContext` igual normaliza todo `DateTime` a UTC, porque PostgreSQL rechaza fechas sin zona.
 - **Fechas**: `DateOnly`. Los meses se representan con el primer día (`PlanDeCuotas.Periodo`). En la URL van como `?mes=yyyy-MM`.
 - **Nuevas entidades del usuario**: implementar `IPerteneceAUsuario` y agregar `HasQueryFilter(x => x.UserId == UsuarioActualId)` en `AppDbContext`. Sumar un test de aislamiento.
 - **Pantallas con totales**: agregar `[GenerarRecurrentes]` al controlador, para que los gastos fijos del mes estén cargados.
@@ -75,6 +76,8 @@ Migraciones actuales (en los dos motores):
 - **JS**: nada de scripts inline (lo bloquea la CSP). Agregar el comportamiento en `site.js` (o `reportes.js` para gráficos) y engancharlo con atributos `data-*`.
 - **Librerías externas**: siempre con versión fija y `integrity` (SRI). Para calcular el hash: `curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A`.
 - **Gráficos**: usar los tokens `--series-1..3` (paleta validada para daltonismo), una sola moneda por gráfico, sin doble eje, y siempre con tabla de datos.
+- **Formularios lentos**: no hace falta hacer nada para la ruedita, se aplica a todo `<form>`. Para otro texto, usa `data-texto-carga="Procesando…"` en el botón. Un enlace que descarga un archivo lleva `download data-sin-carga`.
+- **Service worker**: al cambiar `site.js` o `site.css`, sube `VERSION` en `wwwroot/sw.js`.
 - **Estilos**: las clases base vienen de gastos-equipos (`card-x`, `kpi`, `table-x`, `chip`…); las nuevas están al final de `site.css`.
 
 ## Visual Studio

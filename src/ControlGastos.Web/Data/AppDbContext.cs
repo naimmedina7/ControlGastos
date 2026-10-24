@@ -35,6 +35,17 @@ public abstract class AppDbContext : IdentityDbContext<AppUser>, IDataProtection
     public DbSet<CotizacionBcu> CotizacionesBcu => Set<CotizacionBcu>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
+    /// <summary>
+    /// Todas las fechas con hora (DateTime) se guardan y se leen en UTC. PostgreSQL rechaza fechas sin zona
+    /// ("Kind=Unspecified"), que pueden llegar de un respaldo exportado desde SQLite; SQLite, a su vez, las
+    /// devuelve sin zona. Con este conversor, los dos motores se comportan igual.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>().HaveConversion<FechaUtcConverter>();
+        configurationBuilder.Properties<DateTime?>().HaveConversion<FechaUtcNullableConverter>();
+    }
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
@@ -184,3 +195,20 @@ public class SqliteAppDbContext(DbContextOptions<SqliteAppDbContext> options, IU
 
 public class PostgresAppDbContext(DbContextOptions<PostgresAppDbContext> options, IUsuarioActual usuario)
     : AppDbContext(options, usuario);
+
+/// <summary>Normaliza a UTC al guardar (una fecha sin zona se toma como UTC) y marca como UTC al leer.</summary>
+public class FechaUtcConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+    v => AUtc(v),
+    v => DateTime.SpecifyKind(v, DateTimeKind.Utc))
+{
+    public static DateTime AUtc(DateTime v) => v.Kind switch
+    {
+        DateTimeKind.Utc => v,
+        DateTimeKind.Local => v.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(v, DateTimeKind.Utc),
+    };
+}
+
+public class FechaUtcNullableConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime?, DateTime?>(
+    v => v.HasValue ? FechaUtcConverter.AUtc(v.Value) : v,
+    v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);

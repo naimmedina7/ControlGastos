@@ -98,6 +98,11 @@ Los meses futuros no se guardan. Se muestran como **previstos** en la vista del 
   - `#form-gasto[data-sugerencias]`: autocompletado de descripciones usadas, en JSON dentro de un atributo (la CSP no permite JSON inline en `<script>`).
   - `#form-tarjeta`: muestra el día de cierre solo para crédito.
 - El aviso del estado de cuenta en el formulario repite en JS la regla de `PlanDeCuotas.PeriodoDeFacturacion`. Si cambia una, hay que cambiar la otra.
+- **Indicador de carga** (`site.js`, para la latencia de Vercel):
+  - Al enviar un formulario, el botón presionado muestra una ruedita y un segundo envío se ignora, lo que evita gastos duplicados por doble clic. El botón no se deshabilita (`disabled`) porque el navegador dejaría de enviar su valor: "Guardar y cargar otro" depende de eso.
+  - Al navegar por un enlace, aparece una barra fina arriba de la pantalla si la página tarda más de 250 ms. Un aviso `role="status"` informa "Cargando…" a los lectores de pantalla.
+  - Los enlaces de descarga (`download data-sin-carga`) no activan la barra. Al volver con "atrás", todo se limpia (`pageshow`).
+  - El texto del botón se puede cambiar con `data-texto-carga` (por ejemplo "Importando…").
 - El botón flotante `.fab` (por debajo de 992 px) lleva a "Nuevo gasto" desde cualquier pantalla.
 - El gráfico del panel sigue hecho con CSS (sin JS, liviano). Los gráficos interactivos están en **Reportes**, con Chart.js.
 

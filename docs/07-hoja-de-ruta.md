@@ -65,7 +65,8 @@
 - [x] **Cotización automática del dólar** (BCU vía Frankfurter, sin clave), con ajuste manual opcional.
 - [x] Comandos de administración: `usuarios`, `reset-password`, `desbloquear`.
 - [x] **App instalable** (PWA): manifest, íconos, service worker que no guarda datos, página sin conexión.
-- 154 tests.
+- **Indicador de carga** en botones y navegación, con protección contra doble envío.
+- 168 tests.
 - Fuera de alcance por decisión: verificación en dos pasos y confirmación por email.
 
 ## Ideas para después
