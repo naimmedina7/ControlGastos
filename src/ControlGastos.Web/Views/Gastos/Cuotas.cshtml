@@ -38,7 +38,7 @@
 {
     <section class="card-x">
         <div class="empty">
-            <div class="empty-icon"><i class="bi bi-emoji-smile"></i></div>
+            <partial name="_VistaVacia" model="@("cuotas")" />
             <h3>No tienes cuotas pendientes</h3>
             <p>Cuando cargues una compra en cuotas, la vas a ver acá hasta que termine.</p>
         </div>
@@ -93,7 +93,7 @@ else
                                     {
                                         <span class="chip chip-unico">Empieza en @Fmt.MesCortoAnio(g.PrimerPeriodo)</span>
                                     }
-                                    <div class="cell-sub">@p.Faltan cuota(s) por pagar <span class="progress-mini" aria-hidden="true"><span style="width:@(p.Pagadas * 100 / g.CantidadCuotas)%"></span></span></div>
+                                    <div class="cell-sub">@p.Faltan cuota(s) por pagar @Fmt.ProgresoCuotas(p.Pagadas, g.CantidadCuotas)</div>
                                 </td>
                                 <td class="amount hide-sm">@Fmt.Money(g.MontoCuota, g.Moneda)</td>
                                 <td class="amount">@Fmt.Money(p.Saldo, g.Moneda)</td>

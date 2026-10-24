@@ -91,4 +91,82 @@ public class DisenoTests(AppFactory factory) : IClassFixture<AppFactory>
         string html = ControlGastos.Web.Infrastructure.Fmt.IconoGrupo("bi-cart", fondo).ToString()!;
         Assert.Contains($"style=\"background:{fondo};color:{icono}\"", html);
     }
+
+    // ---------- Fase 3 ----------
+
+    private static readonly Regex TokenRegex = new("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"");
+
+    private static async Task<HttpResponseMessage> PostFormAsync(HttpClient c, string formUrl, string postUrl, Dictionary<string, string> datos)
+    {
+        datos["__RequestVerificationToken"] = TokenRegex.Match(await c.GetStringAsync(formUrl)).Groups[1].Value;
+        return await c.PostAsync(postUrl, new FormUrlEncodedContent(datos));
+    }
+
+    private async Task<HttpClient> RegistrarAsync()
+    {
+        var c = factory.Cliente();
+        var r = await PostFormAsync(c, "/cuenta/registro", "/cuenta/registro", new()
+        {
+            ["Nombre"] = "Diseño", ["Email"] = $"d{Guid.NewGuid():N}@test.local", ["Password"] = "clave1234", ["ConfirmarPassword"] = "clave1234",
+        });
+        Assert.Equal(HttpStatusCode.Redirect, r.StatusCode);
+        return c;
+    }
+
+    [Theory]
+    [InlineData(3, 6, 6, 3)]    // un segmento por cuota
+    [InlineData(12, 12, 12, 12)]
+    [InlineData(9, 9, 9, 9)]
+    public void El_avance_de_cuotas_tiene_un_segmento_por_cuota(int hechas, int total, int segmentos, int llenos)
+    {
+        string html = ControlGastos.Web.Infrastructure.Fmt.ProgresoCuotas(hechas, total).ToString()!;
+        Assert.Equal(segmentos, Regex.Matches(html, "<i").Count);
+        Assert.Equal(llenos, Regex.Matches(html, "<i class=\"on\">").Count);
+        Assert.Contains("aria-hidden=\"true\"", html);
+    }
+
+    [Fact]
+    public void El_avance_de_cuotas_largo_es_una_barra_y_el_contado_no_tiene()
+    {
+        string largo = ControlGastos.Web.Infrastructure.Fmt.ProgresoCuotas(6, 24).ToString()!;
+        Assert.Contains("<i class=\"barra\"><b style=\"width:25%\"></b></i>", largo);
+        Assert.Equal("", ControlGastos.Web.Infrastructure.Fmt.ProgresoCuotas(1, 1).ToString());
+    }
+
+    [Fact]
+    public async Task Nuevo_gasto_pliega_los_campos_secundarios_y_los_abre_si_hay_errores()
+    {
+        var c = await RegistrarAsync();
+        string html = await c.GetStringAsync("/gastos/nuevo");
+        string detalles = Regex.Match(html, "<details class=\"mas-detalles\"[^>]*>[\\s\\S]*?</details>").Value;
+        Assert.DoesNotContain("open", Regex.Match(detalles, "<details[^>]*>").Value);
+        foreach (var campo in new[] { "name=\"Fecha\"", "name=\"CategoriaId\"", "name=\"Comercio\"", "name=\"EnCuotas\"", "name=\"Notas\"" })
+            Assert.Contains(campo, detalles);
+        Assert.DoesNotContain("name=\"MontoCuota\"", detalles);       // lo principal queda a la vista
+        Assert.DoesNotContain("name=\"TarjetaId\"", detalles);
+        Assert.DoesNotContain("id=\"s-cierre\"", detalles);           // el aviso de cierre no se esconde
+
+        // Con un error de validación vuelve abierto, para que se vea qué falta.
+        var r = await PostFormAsync(c, "/gastos/nuevo", "/gastos/nuevo", new() { ["Descripcion"] = "", ["Fecha"] = "2026-10-10", ["Moneda"] = "UYU", ["MontoCuota"] = "100" });
+        Assert.Matches("<details class=\"mas-detalles\" open", await r.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task El_panel_es_un_bento_con_escalera_de_cuotas_y_vista_previa_si_esta_vacio()
+    {
+        var c = await RegistrarAsync();
+        string vacio = await c.GetStringAsync("/panel");
+        Assert.Contains("class=\"bento\"", vacio);
+        Assert.Contains("class=\"vista-vacia vista-vacia-filas\"", vacio);
+        Assert.DoesNotContain("class=\"escalera\"", vacio);    // sin cuotas a futuro no hay escalera
+
+        string hoy = DateTime.Today.ToString("yyyy-MM-dd");
+        await PostFormAsync(c, "/gastos/nuevo", "/gastos/nuevo", new()
+        {
+            ["Descripcion"] = "Heladera", ["Fecha"] = hoy, ["Moneda"] = "UYU", ["MontoCuota"] = "1000", ["EnCuotas"] = "true", ["CantidadCuotas"] = "6", ["CuotaActual"] = "1",
+        });
+        string lleno = await c.GetStringAsync("/panel");
+        Assert.Contains("class=\"escalera\"", lleno);
+        Assert.Contains("En cuotas", lleno);                    // desglose del total en pesos
+    }
 }

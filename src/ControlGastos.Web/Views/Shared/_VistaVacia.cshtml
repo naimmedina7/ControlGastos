@@ -1,0 +1,27 @@
+@model string
+@* Estado vacío: vista previa en gris de cómo se va a ver la lista cuando tenga datos. Decorativa.
+   Modelo: "filas" (lista de gastos o categorías), "cuotas" (planes con su avance) o "tarjetas". *@
+<div class="vista-vacia vista-vacia-@Model" aria-hidden="true">
+    @if (Model == "tarjetas")
+    {
+        <div class="vv-tarjeta"><span class="vv-franja"></span><span class="vv-linea"></span><span class="vv-linea corta"></span></div>
+    }
+    else
+    {
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="vv-fila">
+                <span class="vv-icono"></span>
+                <span class="vv-textos"><span class="vv-linea"></span><span class="vv-linea corta"></span></span>
+                @if (Model == "cuotas")
+                {
+                    <span class="vv-segmentos">@for (int j = 0; j < 6; j++) { <i class="@(j < 4 - i ? "on" : "")"></i> }</span>
+                }
+                else
+                {
+                    <span class="vv-monto"></span>
+                }
+            </div>
+        }
+    }
+</div>

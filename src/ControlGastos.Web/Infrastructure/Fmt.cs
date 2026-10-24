@@ -83,6 +83,20 @@ public static class Fmt
         return new HtmlString($"<span class=\"cat-icon {extra}\" style=\"background:{color};color:{ColorIconoSobre(color)}\" aria-hidden=\"true\"><i class=\"bi {WebUtility.HtmlEncode(icono ?? "bi-credit-card")}\"></i></span>");
     }
 
+    /// <summary>Avance de una compra en cuotas: un segmento por cuota (hasta 12); con más, una barra continua.
+    /// Es decorativo: el texto de al lado ya dice cuántas faltan.</summary>
+    public static IHtmlContent ProgresoCuotas(int hechas, int total)
+    {
+        if (total < 2) return HtmlString.Empty;
+        hechas = Math.Clamp(hechas, 0, total);
+        var sb = new System.Text.StringBuilder("<span class=\"cuotas-avance\" aria-hidden=\"true\">");
+        if (total <= 12)
+            for (int i = 1; i <= total; i++) sb.Append(i <= hechas ? "<i class=\"on\"></i>" : "<i></i>");
+        else
+            sb.Append($"<i class=\"barra\"><b style=\"width:{hechas * 100 / total}%\"></b></i>");
+        return new HtmlString(sb.Append("</span>").ToString());
+    }
+
     /// <summary>Blanco sobre el color, salvo que no llegue a 3:1 (colores claros de un respaldo): ahí, verde tinta.</summary>
     public static string ColorIconoSobre(string color)
     {

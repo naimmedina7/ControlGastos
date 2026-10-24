@@ -1,4 +1,5 @@
 @model GastoFormVm
+@inject Reloj Reloj
 @{
     bool editando = Model.Id.HasValue;
     ViewData["Title"] = editando ? "Editar gasto" : "Nuevo gasto";
@@ -7,6 +8,9 @@
     string accion = editando ? "Editar" : "Nuevo";
     // Sugerencias para autocompletar: viajan como JSON en un atributo (la CSP no permite scripts inline).
     string sugerencias = System.Text.Json.JsonSerializer.Serialize(Model.Sugerencias.Select(s => new { d = s.Descripcion, c = s.CategoriaId, t = s.TarjetaId, m = s.Moneda.ToString() }));
+    // "Más detalles" arranca abierto si hay algo que mirar: al editar, con datos cargados o con errores.
+    bool abrirDetalles = editando || Model.EnCuotas || Model.CategoriaId != null || Model.Fecha != Reloj.Hoy
+        || !string.IsNullOrEmpty(Model.Comercio) || !string.IsNullOrEmpty(Model.Notas) || !ViewData.ModelState.IsValid;
 }
 
 <div class="page-head">
@@ -29,7 +33,7 @@
         <div class="card-x">
             <div class="form-section">
                 <div class="row g-3">
-                    <div class="col-md-7">
+                    <div class="col-12">
                         <label asp-for="MontoCuota" class="form-label" id="lbl-monto">@(Model.EnCuotas ? "Monto de cada cuota" : "Monto")</label>
                         <div class="input-group input-group-lg">
                             <select asp-for="Moneda" class="form-select money-cur" aria-label="Moneda">
@@ -40,11 +44,6 @@
                                    value="@(Model.MontoCuota > 0 ? Model.MontoCuota.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "")" />
                         </div>
                         <span asp-validation-for="MontoCuota" class="field-error"></span>
-                    </div>
-                    <div class="col-md-5">
-                        <label asp-for="Fecha" class="form-label">Fecha</label>
-                        <input asp-for="Fecha" class="form-control form-control-lg" type="date" required />
-                        <span asp-validation-for="Fecha" class="field-error"></span>
                     </div>
                     <div class="col-12">
                         <label asp-for="Descripcion" class="form-label">Descripción</label>
@@ -85,49 +84,61 @@
                 </div>
             </div>
 
-            <div class="form-section">
-                <div class="row g-3">
-                    <div class="col-md-7">
-                        <label asp-for="CategoriaId" class="form-label">Categoría</label>
-                        <select asp-for="CategoriaId" class="form-select">
-                            <option value="">Sin categoría</option>
-                            @foreach (var c in Model.Categorias)
-                            {
-                                <option value="@c.Id">@c.Nombre</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <label asp-for="Comercio" class="form-label">Comercio <span class="text-muted-x">(opcional)</span></label>
-                        <input asp-for="Comercio" class="form-control" maxlength="120" placeholder="Como figura en el estado de cuenta" />
-                    </div>
-                </div>
-            </div>
+            <details class="mas-detalles" @(abrirDetalles ? "open" : "")>
+                <summary>
+                    <span><strong>Más detalles</strong><span class="mas-detalles-sub">Fecha, categoría, cuotas, comercio y notas</span></span>
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                </summary>
 
-            <div class="form-section">
-                <div class="form-check form-switch mb-1">
-                    <input asp-for="EnCuotas" class="form-check-input" role="switch" data-toggle-cuotas />
-                    <label asp-for="EnCuotas" class="form-check-label"><strong>Es una compra en cuotas</strong></label>
-                </div>
-                <p class="form-section-sub">Si la compra ya empezó (por ejemplo "5/6" en tu estado de cuenta), indica qué cuota se paga en el mes de la fecha.</p>
-                <div class="row g-3" id="bloque-cuotas" @(Model.EnCuotas ? "" : "hidden")>
-                    <div class="col-6 col-md-4">
-                        <label asp-for="CantidadCuotas" class="form-label">Cantidad de cuotas</label>
-                        <input asp-for="CantidadCuotas" class="form-control" type="number" min="1" max="72" step="1" inputmode="numeric" />
-                        <span asp-validation-for="CantidadCuotas" class="field-error"></span>
+                <div class="form-section">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label asp-for="Fecha" class="form-label">Fecha</label>
+                            <input asp-for="Fecha" class="form-control" type="date" required />
+                            <span asp-validation-for="Fecha" class="field-error"></span>
+                        </div>
+                        <div class="col-md-7">
+                            <label asp-for="CategoriaId" class="form-label">Categoría</label>
+                            <select asp-for="CategoriaId" class="form-select">
+                                <option value="">Sin categoría</option>
+                                @foreach (var c in Model.Categorias)
+                                {
+                                    <option value="@c.Id">@c.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Comercio" class="form-label">Comercio <span class="text-muted-x">(opcional)</span></label>
+                            <input asp-for="Comercio" class="form-control" maxlength="120" placeholder="Como figura en el estado de cuenta" />
+                        </div>
                     </div>
-                    <div class="col-6 col-md-4">
-                        <label asp-for="CuotaActual" class="form-label">Cuota de este mes</label>
-                        <input asp-for="CuotaActual" class="form-control" type="number" min="1" max="72" step="1" inputmode="numeric" />
-                        <span asp-validation-for="CuotaActual" class="field-error"></span>
-                    </div>
                 </div>
-            </div>
 
-            <div class="form-section">
-                <label asp-for="Notas" class="form-label">Notas <span class="text-muted-x">(opcional)</span></label>
-                <textarea asp-for="Notas" class="form-control" rows="2" maxlength="500"></textarea>
-            </div>
+                <div class="form-section">
+                    <div class="form-check form-switch mb-1">
+                        <input asp-for="EnCuotas" class="form-check-input" role="switch" data-toggle-cuotas />
+                        <label asp-for="EnCuotas" class="form-check-label"><strong>Es una compra en cuotas</strong></label>
+                    </div>
+                    <p class="form-section-sub">Si la compra ya empezó (por ejemplo "5/6" en tu estado de cuenta), indica qué cuota se paga en el mes de la fecha.</p>
+                    <div class="row g-3" id="bloque-cuotas" @(Model.EnCuotas ? "" : "hidden")>
+                        <div class="col-6 col-md-4">
+                            <label asp-for="CantidadCuotas" class="form-label">Cantidad de cuotas</label>
+                            <input asp-for="CantidadCuotas" class="form-control" type="number" min="1" max="72" step="1" inputmode="numeric" />
+                            <span asp-validation-for="CantidadCuotas" class="field-error"></span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label asp-for="CuotaActual" class="form-label">Cuota de este mes</label>
+                            <input asp-for="CuotaActual" class="form-control" type="number" min="1" max="72" step="1" inputmode="numeric" />
+                            <span asp-validation-for="CuotaActual" class="field-error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label asp-for="Notas" class="form-label">Notas <span class="text-muted-x">(opcional)</span></label>
+                    <textarea asp-for="Notas" class="form-control" rows="2" maxlength="500"></textarea>
+                </div>
+            </details>
 
             <div class="form-actions">
                 <a class="btn btn-ghost" asp-action="Index">Cancelar</a>

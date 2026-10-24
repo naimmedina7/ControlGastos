@@ -60,7 +60,12 @@
         e.preventDefault();
         e.stopImmediatePropagation();
         var first = form.querySelector(".is-invalid");
-        if (first) first.focus();
+        if (first) {
+          // Si el campo está dentro de un bloque plegado ("Más detalles"), se abre antes de enfocarlo.
+          var plegado = first.closest("details:not([open])");
+          if (plegado) plegado.open = true;
+          first.focus();
+        }
       }
     });
     ["input", "change"].forEach(function (ev) {

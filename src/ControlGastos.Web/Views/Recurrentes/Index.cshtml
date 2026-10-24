@@ -40,7 +40,7 @@
     @if (Model.Lista.Count == 0)
     {
         <div class="empty">
-            <div class="empty-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <partial name="_VistaVacia" model="@("filas")" />
             <h3>Todavía no tienes gastos fijos</h3>
             <p>Agrega lo que pagas todos los meses y deja de cargarlo a mano.</p>
             <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto fijo</a>

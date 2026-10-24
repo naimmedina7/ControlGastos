@@ -103,7 +103,7 @@
     @if (r.Lineas.Count == 0)
     {
         <div class="empty">
-            <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+            <partial name="_VistaVacia" model="@("filas")" />
             <h3>No hay gastos en @Fmt.MesAnio(Model.Mes)</h3>
             <p>Cuando cargues un gasto (o una compra en cuotas que tenga una cuota este mes), aparece acá.</p>
             <a class="btn btn-primary" asp-action="Nuevo"><i class="bi bi-plus-lg"></i>Nuevo gasto</a>
@@ -147,7 +147,7 @@
                                 @if (g.EnCuotas)
                                 {
                                     <div><span class="cuota-pill">@l.Numero/@g.CantidadCuotas</span> @if (l.EsUltima) { <span class="chip chip-ok">última</span> }</div>
-                                    <div class="cell-sub">@Fmt.MesCortoAnio(g.PrimerPeriodo) <i class="bi bi-arrow-right" style="font-size:.7rem"></i> @Fmt.MesCortoAnio(g.UltimoPeriodo) <span class="progress-mini" aria-hidden="true"><span style="width:@(l.Numero * 100 / g.CantidadCuotas)%"></span></span></div>
+                                    <div class="cell-sub">@Fmt.MesCortoAnio(g.PrimerPeriodo) <i class="bi bi-arrow-right" style="font-size:.7rem"></i> @Fmt.MesCortoAnio(g.UltimoPeriodo) @Fmt.ProgresoCuotas(l.Numero, g.CantidadCuotas)</div>
                                 }
                                 else if (g.EsFijo)
                                 {
