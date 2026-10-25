@@ -56,7 +56,7 @@ dotnet test
 ```
 control-gastos/
 ├── src/ControlGastos.Web/       App MVC (dominio, datos, servicios, controladores, vistas)
-├── tests/ControlGastos.Tests/   xUnit: cuotas, gastos fijos, ingresos, aislamiento, diseño y seguridad HTTP (203 tests)
+├── tests/ControlGastos.Tests/   xUnit: cuotas, gastos fijos, ingresos, aislamiento, diseño y seguridad HTTP (210 tests)
 ├── docs/                        Documentación
 ├── Dockerfile                   Imagen de producción (Render, Docker local)
 ├── Dockerfile.vercel            Imagen para Vercel (Container Runtime)

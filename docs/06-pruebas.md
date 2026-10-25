@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-203 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
+210 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
 
 ## Qué cubren
 
@@ -47,6 +47,7 @@ dotnet test
 - **El estado de cuenta real de octubre 2026**: 23 líneas → 21 gastos y 2 pagos, sin líneas no reconocidas. Suma **$ 13.933,48 y US$ 37,44**.
 - Lee comercio, fecha, moneda, monto y "n/N".
 - Funciona con espacios en lugar de tabuladores y sin la máscara de la tarjeta.
+- **Formato con la fecha primero** (otro banco: `17/10/2026  •4822  MERPAGO*GER73XX  $  1.300,00  1/10`): pesos y dólares, con y sin cuota, con y sin tarjeta, año corto; pagos y cuotas fuera de rango igual que en el otro formato; los dos formatos mezclados en un mismo texto.
 - Los recibos de pago y los montos negativos no son gastos.
 - Encabezados, fechas imposibles, cuotas fuera de rango y totales quedan como no reconocidos.
 - Montos en formato uruguayo (`1.830,00`, `-15.189,15`, `1830.00`).

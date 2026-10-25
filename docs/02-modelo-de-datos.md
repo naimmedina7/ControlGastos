@@ -143,15 +143,24 @@ Visa, cierre el 25
 
 ## Importación del estado de cuenta
 
-Formato que se reconoce, una línea por movimiento, con columnas separadas por tabulador o espacios:
+Se reconocen dos formatos, una línea por movimiento, con columnas separadas por tabulador o espacios. En un mismo texto se pueden mezclar.
+
+Comercio primero y la fecha en el medio:
 
 ```
 **** 1012   MERPAGO*MERCADOLIBRE   Plan Pagos   05/10/26   Pesos   407,90   3/3
             NETFLIX.COM            Comun        21/10/26   Dólares 5,17
 ```
 
+La fecha primero (otros bancos):
+
+```
+17/10/2026   •4822   MERPAGO*GER73XX   $     1.300,00   1/10
+05/10/2026   •4822   NETFLIX.COM       U$S   5,17
+```
+
 - **Opcionales**:
-  - La máscara de la tarjeta (`**** 1012`).
+  - La máscara de la tarjeta (`**** 1012`, `XXXX 1012`, `•4822`). No se guarda.
   - El tipo (`Plan Pagos`, `Comun`).
   - La cuota (`n/N`).
 - **Montos**: formato uruguayo (`1.830,00`) y también `1830.00`.

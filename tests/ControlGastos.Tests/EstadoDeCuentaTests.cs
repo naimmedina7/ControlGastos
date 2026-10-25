@@ -76,6 +76,51 @@ public class EstadoDeCuentaTests
     }
 
     [Fact]
+    public void Lee_el_formato_de_otro_banco_con_la_fecha_primero()
+    {
+        // Tal como lo copia el usuario desde la web del banco (separado por tabuladores).
+        var l = EstadoDeCuenta.InterpretarLinea(1, "17/10/2026\t•4822\tMERPAGO*GER73XX\t$\t1.300,00\t1/10");
+        Assert.Equal(TipoLinea.Gasto, l.Tipo);
+        Assert.Equal("MERPAGO*GER73XX", l.Comercio);          // sin la máscara de la tarjeta
+        Assert.Equal(new DateOnly(2026, 10, 17), l.Fecha);
+        Assert.Equal(Moneda.UYU, l.Moneda);
+        Assert.Equal(1300m, l.Monto);
+        Assert.Equal((1, 10), (l.CuotaActual, l.CantidadCuotas));
+    }
+
+    [Theory]
+    [InlineData("05/10/2026\t•4822\tNETFLIX.COM\tU$S\t5,17\t", "NETFLIX.COM", Moneda.USD, 5.17, 1, 1)]           // dólares, contado
+    [InlineData("05/10/2026\t•4822\tTIENDA INGLESA\t$\t2.150,40", "TIENDA INGLESA", Moneda.UYU, 2150.40, 1, 1)]  // sin columna de cuota
+    [InlineData("05/10/26   ·4822   DLO*PedidosYa Burger   $   698,00", "DLO*PedidosYa Burger", Moneda.UYU, 698.00, 1, 1)] // espacios y año corto
+    [InlineData("05/10/2026\tMERPAGO*SEP\t$\t409,37\t2/10", "MERPAGO*SEP", Moneda.UYU, 409.37, 2, 10)]        // sin tarjeta
+    public void El_formato_con_la_fecha_primero_admite_variantes(string linea, string comercio, Moneda moneda, double monto, int n, int total)
+    {
+        var l = EstadoDeCuenta.InterpretarLinea(1, linea);
+        Assert.Equal(TipoLinea.Gasto, l.Tipo);
+        Assert.Equal(comercio, l.Comercio);
+        Assert.Equal(moneda, l.Moneda);
+        Assert.Equal((decimal)monto, l.Monto);
+        Assert.Equal((n, total), (l.CuotaActual, l.CantidadCuotas));
+    }
+
+    [Fact]
+    public void En_el_formato_con_la_fecha_primero_los_pagos_tampoco_son_gastos()
+    {
+        Assert.Equal(TipoLinea.PagoTarjeta, EstadoDeCuenta.InterpretarLinea(1, "07/10/2026\t•4822\tSU PAGO\t$\t-15.000,00").Tipo);
+        Assert.Equal(TipoLinea.NoReconocida, EstadoDeCuenta.InterpretarLinea(2, "17/10/2026\t•4822\tMERPAGO*GER73XX\t$\t1.300,00\t11/10").Tipo);
+    }
+
+    [Fact]
+    public void Un_mismo_texto_puede_mezclar_los_dos_formatos()
+    {
+        var lineas = EstadoDeCuenta.Interpretar(
+            "**** 1012\tNUEVA VISION\tPlan Pagos\t06/10/26\tPesos\t1.830,00\t5/6\n" +
+            "17/10/2026\t•4822\tMERPAGO*GER73XX\t$\t1.300,00\t1/10\n");
+        Assert.All(lineas, l => Assert.Equal(TipoLinea.Gasto, l.Tipo));
+        Assert.Equal(3130m, lineas.Sum(l => l.Monto));
+    }
+
+    [Fact]
     public void Los_recibos_de_pago_y_montos_negativos_no_son_gastos()
     {
         Assert.Equal(TipoLinea.PagoTarjeta, EstadoDeCuenta.InterpretarLinea(1, "**** 1012\tRECIBO DE PAGO\t\t07/10/26\tPesos\t-15.189,15\t").Tipo);
