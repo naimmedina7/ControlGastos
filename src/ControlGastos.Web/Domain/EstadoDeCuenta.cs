@@ -31,10 +31,11 @@ public record LineaEstadoCuenta(
 }
 
 /// <summary>
-/// Interpreta el texto copiado de un estado de cuenta de tarjeta. Formato esperado (columnas separadas
-/// por tabulador o espacios):
+/// Interpreta el texto copiado de un estado de cuenta de tarjeta. Reconoce dos formatos (columnas separadas
+/// por tabulador o espacios), según el banco:
 /// <code>**** 1012  MERPAGO*MERCADOLIBRE  Plan Pagos  05/10/26  Pesos  407,90  3/3</code>
-/// La máscara de la tarjeta y el tipo ("Plan Pagos", "Comun") son opcionales.
+/// <code>17/10/2026  •4822  MERPAGO*GER73XX  $  1.300,00  1/10</code>
+/// La máscara de la tarjeta, el tipo ("Plan Pagos", "Comun") y la cuota son opcionales.
 /// </summary>
 public static partial class EstadoDeCuenta
 {
@@ -48,16 +49,30 @@ public static partial class EstadoDeCuenta
     [GeneratedRegex(@"\s+")]
     private static partial Regex Espacios();
 
-    [GeneratedRegex(
-        @"^\s*(?:[*xX•]{2,}\s*\d{3,4}\s+)?" +                                   // **** 1012 (opcional)
-        @"(?<comercio>.+?)\s+" +
-        @"(?:(?:plan\s+(?:de\s+)?pagos?|com[uú]n|contado|cuotas)\s+)?" +        // tipo (opcional)
-        @"(?<fecha>\d{1,2}/\d{1,2}/(?:\d{4}|\d{2}))\s+" +
+    /// <summary>Máscara de la tarjeta: "**** 1012", "XXXX 1012" o "•4822" (opcional en los dos formatos).</summary>
+    private const string Mascara = @"(?:(?:[*xX]{2,}|[•·]+)\s*\d{3,4}\s+)?";
+
+    /// <summary>Moneda, monto y cuota: el final de la línea, igual en los dos formatos.</summary>
+    private const string Final =
         @"(?<moneda>pesos|d[oó]lares|u\$s|us\$|usd|uyu|\$)\s*" +
         @"(?<monto>-?\s?\d[\d.,]*)" +
-        @"(?:\s+(?<n>\d{1,2})\s*/\s*(?<N>\d{1,2}))?\s*$",
+        @"(?:\s+(?<n>\d{1,2})\s*/\s*(?<N>\d{1,2}))?\s*$";
+
+    // Formato 1: comercio, tipo y fecha.
+    [GeneratedRegex(
+        @"^\s*" + Mascara +
+        @"(?<comercio>.+?)\s+" +
+        @"(?:(?:plan\s+(?:de\s+)?pagos?|com[uú]n|contado|cuotas)\s+)?" +        // tipo (opcional)
+        @"(?<fecha>\d{1,2}/\d{1,2}/(?:\d{4}|\d{2}))\s+" + Final,
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 100)]
     private static partial Regex Linea();
+
+    // Formato 2 (otros bancos): la fecha primero, después la tarjeta y el comercio.
+    [GeneratedRegex(
+        @"^\s*(?<fecha>\d{1,2}/\d{1,2}/(?:\d{4}|\d{2}))\s+" + Mascara +
+        @"(?<comercio>.+?)\s+" + Final,
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 100)]
+    private static partial Regex LineaFechaPrimero();
 
     private static readonly string[] MarcasDePago = { "RECIBO DE PAGO", "PAGO RECIBIDO", "SU PAGO", "PAGO EN LINEA", "PAGO TARJETA" };
 
@@ -88,7 +103,9 @@ public static partial class EstadoDeCuenta
         Match m;
         try
         {
-            m = Linea().Match(Espacios().Replace(linea, " ").Trim());
+            string limpia = Espacios().Replace(linea, " ").Trim();
+            m = Linea().Match(limpia);
+            if (!m.Success) m = LineaFechaPrimero().Match(limpia);
         }
         catch (RegexMatchTimeoutException)
         {

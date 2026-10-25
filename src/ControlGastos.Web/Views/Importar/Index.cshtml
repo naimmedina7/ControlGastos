@@ -3,7 +3,8 @@
     ViewData["Title"] = "Importar estado de cuenta";
     ViewData["Section"] = "Herramientas";
     var a = Model.Analisis;
-    string ejemplo = "**** 1012\tMERPAGO*MERCADOLIBRE\tPlan Pagos\t05/10/26\tPesos\t407,90\t3/3\n**** 1012\tNETFLIX.COM\tComun\t21/10/26\tDólares\t5,17";
+    // Los dos formatos que se reconocen (según el banco).
+    string ejemplo = "**** 1012\tMERPAGO*MERCADOLIBRE\tPlan Pagos\t05/10/26\tPesos\t407,90\t3/3\n**** 1012\tNETFLIX.COM\tComun\t21/10/26\tDólares\t5,17\n\no también:\n\n17/10/2026\t•4822\tMERPAGO*GER73XX\t$\t1.300,00\t1/10";
 }
 
 <div class="page-head">
@@ -19,7 +20,7 @@
 <form method="post" asp-action="Analizar" data-validate novalidate class="card-x mb-4" id="form-importar">
     <div class="form-section">
         <h2 class="form-section-title">1 · Pega el texto</h2>
-        <p class="form-section-sub">Una línea por movimiento, con fecha, moneda y monto. Las cuotas tipo "3/10" se reconocen solas y los "RECIBO DE PAGO" se omiten.</p>
+        <p class="form-section-sub">Una línea por movimiento, con fecha, moneda y monto, en el orden de tu banco (la fecha puede ir al principio o en el medio). Las cuotas tipo "3/10" se reconocen solas y los "RECIBO DE PAGO" se omiten.</p>
         <textarea asp-for="Texto" class="form-control mono" rows="@(a == null ? 10 : 4)" required maxlength="@EstadoDeCuenta.MaxCaracteres" spellcheck="false" placeholder="@ejemplo"></textarea>
         <span asp-validation-for="Texto" class="field-error"></span>
     </div>

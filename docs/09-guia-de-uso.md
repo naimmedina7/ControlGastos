@@ -31,7 +31,7 @@ El panel de la derecha muestra el resumen y, si la tarjeta tiene día de cierre,
 
 Herramientas → **Importar estado de cuenta**:
 
-1. Copia los movimientos desde la web del banco o desde el PDF y pégalos. No hace falta limpiar nada: los encabezados, los totales y los "RECIBO DE PAGO" se detectan y se omiten.
+1. Copia los movimientos desde la web del banco o desde el PDF y pégalos. No hace falta limpiar nada: los encabezados, los totales y los "RECIBO DE PAGO" se detectan y se omiten. Sirve tanto si tu banco pone la fecha en el medio (`**** 1012  COMERCIO  Plan Pagos  05/10/26  Pesos  407,90  3/3`) como si la pone al principio (`17/10/2026  •4822  COMERCIO  $  1.300,00  1/10`).
 2. Elige la **tarjeta**. El mes del estado de cuenta se deduce solo, pero puedes cambiarlo.
 3. Presiona **Analizar** y revisa la vista previa:
    - Cada línea trae una descripción y una categoría propuestas. Si ya importaste ese comercio antes, se repite lo que elegiste la última vez.
