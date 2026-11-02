@@ -81,12 +81,14 @@ Navegador ──cookie .ControlGastos.Auth──▶ Kestrel
 
 ## Gastos fijos sin procesos en segundo plano
 
-Los gastos fijos no necesitan un job programado. Antes de mostrar una pantalla con totales, el filtro `[GenerarRecurrentes]` llama a `RecurrenteService.GenerarPendientesAsync(mesActual)`, que crea los gastos de los meses que faltan:
-- Es idempotente: cada recurrente guarda `GeneradoHasta`, y hay un índice único (recurrente, mes).
+Los gastos fijos no necesitan un job programado. Antes de mostrar una pantalla con totales, el filtro `[GenerarRecurrentes]` llama a `RecurrenteService.GenerarPendientesAsync(hasta)`, que crea los gastos de los meses que faltan:
+- `hasta` es el mes en curso o, si la pantalla muestra un mes futuro (`?mes=2027-02`), ese mes, con un tope de 24 meses (`RecurrenteService.HastaQueMes`). Así, al avanzar a febrero, los fijos de febrero ya están cargados y suman.
+- Es idempotente: cada recurrente guarda `GeneradoHasta`, y hay un índice único (recurrente, estado de cuenta).
+- Con tarjeta de crédito, dos meses pueden caer en el mismo estado de cuenta (si cambió el día de cierre, o un día 31 en un mes de 30). Ese gasto se **salta** en lugar de chocar con el índice.
+- **Cada fijo se guarda por separado**: si uno falla, los demás se cargan igual, y el error queda como advertencia en el log. (Antes se guardaban todos juntos y un choque de un fijo de crédito frenaba la carga de todos los demás, sin avisar.)
 - Cuesta una sola consulta cuando no hay nada pendiente.
-- Si dos requests generan al mismo tiempo, la segunda choca con el índice único y se descarta sin error.
 
-Los meses futuros no se guardan. Se muestran como **previstos** en la vista del mes y se suman a la proyección del panel.
+Más allá de lo generado, los meses futuros se muestran como **previstos** en la vista del mes y se suman a la proyección del panel.
 
 ## Front-end
 

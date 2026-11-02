@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-210 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
+219 tests con xUnit, en [tests/ControlGastos.Tests](../tests/ControlGastos.Tests). Corren en unos segundos y no necesitan ninguna base instalada: usan SQLite en memoria o en un archivo temporal.
 
 ## Qué cubren
 
@@ -36,6 +36,10 @@ dotnet test
 - El día 31 se acota al largo del mes (28/2).
 - Editar aplica a los próximos meses sin tocar los ya cargados.
 - Eliminar el fijo conserva los gastos generados.
+- **Un fijo de crédito que choca no frena a los de débito** (cierre cambiado después de generar, o día 31 con cierre 30): los demás se cargan y el de crédito no se duplica. Este test reproduce el error real de noviembre 2026.
+- Al mirar un mes futuro se generan los fijos hasta ese mes (tope de 24 meses), sin duplicar.
+- Editar rehace los meses futuros ya cargados, salvo los ajustados a mano; pausar y eliminar quitan los meses futuros.
+- `FijosHttpTests`: con la app completa, un fijo creado hoy aparece y suma al mirar un mes de acá a 3 meses.
 - Previstos y proyección incluyen los meses futuros.
 - Otro usuario no ve ni genera fijos ajenos.
 - Valida que el mes final no sea anterior al inicial.

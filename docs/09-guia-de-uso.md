@@ -59,11 +59,11 @@ Para ver cuánto te falta pagar de cada compra y en qué mes se libera cada cuot
 Lo que pagas **todos los meses** con un monto conocido.
 
 - Se cargan **solos** en cada mes: la primera vez que abres la app en un mes nuevo, ya están.
-- En los meses que vienen aparecen como **previstos**: se ven, pero todavía no suman.
-- **Si un mes vino distinto** (por ejemplo, la facultad aumentó solo ese mes), edita el gasto de ese mes desde *Gastos del mes*.
-- **Si cambia para siempre**, edita el gasto fijo: aplica desde el próximo mes que se cargue.
-- **Pausar** sirve si dejas de pagar unos meses. Al reanudar, sigue desde el mes en curso, sin cargar los meses de pausa.
-- **Si borras** el gasto de un mes, no vuelve a aparecer. **Si borras el gasto fijo**, los meses ya cargados se conservan.
+- **También en los meses que vienen**: si avanzas a febrero en *Gastos del mes* o en el inicio, los fijos de febrero ya aparecen y suman en los totales (hasta 2 años adelante).
+- **Si un mes vino distinto** (por ejemplo, la facultad aumentó solo ese mes), edita el gasto de ese mes desde *Gastos del mes*. Ese ajuste se respeta aunque después edites el gasto fijo.
+- **Si cambia para siempre**, edita el gasto fijo: aplica desde el mes que viene. Los meses futuros que ya estaban cargados se actualizan solos.
+- **Pausar** sirve si dejas de pagar unos meses: se quitan los meses futuros. Al reanudar, sigue desde el mes en curso, sin cargar los meses de pausa.
+- **Si borras** el gasto de un mes, no vuelve a aparecer. **Si borras el gasto fijo**, los meses hasta el actual se conservan y los futuros se quitan.
 
 ¿Fijo o en cuotas?
 

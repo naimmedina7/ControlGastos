@@ -66,6 +66,41 @@ public class RecurrentesTests : IDisposable
         Assert.Equal(2, (await GastosDeAsync(Ana, r.Id)).Count);
     }
 
+    [Theory]
+    [InlineData(25, 28, 28)]   // la tarjeta cambió el día de cierre después de generar octubre
+    [InlineData(30, 31, 30)]   // día 31: el 31/10 cae después del cierre, el 30/11 (acotado) no
+    public async Task Un_fijo_de_credito_que_choca_no_frena_a_los_de_debito(int cierreInicial, int dia, int cierreFinal)
+    {
+        int credito; int[] debito;
+        await using (var db = Contexto(Ana))
+        {
+            var visa = new Tarjeta { Nombre = "Visa", Tipo = TipoTarjeta.Credito, DiaCierre = cierreInicial };
+            var itau = new Tarjeta { Nombre = "Itaú débito", Tipo = TipoTarjeta.Debito };
+            db.Tarjetas.AddRange(visa, itau);
+            await db.SaveChangesAsync();
+            var s = new RecurrenteService(db);
+            // El de crédito cae después del cierre: el de octubre ya va al estado de cuenta de noviembre.
+            credito = (await s.CrearAsync(Fijo("Seguro", 800m, Oct, dia: dia, tarjeta: visa.Id), Oct)).Id;
+            debito = new[]
+            {
+                (await s.CrearAsync(Fijo("Alquiler", 15000m, Oct, tarjeta: itau.Id), Oct)).Id,
+                (await s.CrearAsync(Fijo("Internet", 1200m, Oct, tarjeta: itau.Id), Oct)).Id,
+                (await s.CrearAsync(Fijo("Gimnasio", 1500m, Oct, tarjeta: itau.Id), Oct)).Id,
+            };
+            visa.DiaCierre = cierreFinal;
+            await db.SaveChangesAsync();
+        }
+        Assert.Equal(new DateOnly(2026, 11, 1), (await GastosDeAsync(Ana, credito)).Single().PrimerPeriodo);
+
+        // Llega noviembre: el de crédito de noviembre caería en el mismo estado de cuenta que el de octubre.
+        await using (var db = Contexto(Ana))
+            await new RecurrenteService(db).GenerarPendientesAsync(Oct.AddMonths(1));
+
+        foreach (var id in debito)
+            Assert.Contains(await GastosDeAsync(Ana, id), g => g.PrimerPeriodo == new DateOnly(2026, 11, 1));
+        Assert.Single(await GastosDeAsync(Ana, credito), g => g.PrimerPeriodo == new DateOnly(2026, 11, 1)); // sin duplicar
+    }
+
     [Fact]
     public async Task Un_mes_borrado_no_vuelve_a_aparecer()
     {
@@ -133,11 +168,85 @@ public class RecurrentesTests : IDisposable
         await using var db = Contexto(Ana);
         var s = new RecurrenteService(db);
         var r = await s.CrearAsync(Fijo("Netflix", 400m, new DateOnly(2026, 9, 1)), Oct);
-        Assert.Equal(2, await s.EliminarAsync(r.Id));
+        Assert.Equal(2, await s.EliminarAsync(r.Id, Oct));
 
         await using var db2 = Contexto(Ana);
         Assert.Equal(2, await db2.Gastos.CountAsync(g => g.Descripcion == "Netflix" && g.GastoRecurrenteId == null));
         Assert.Empty(await db2.GastosRecurrentes.ToListAsync());
+    }
+
+    // ---------- Meses futuros ----------
+
+    [Theory]
+    [InlineData("2026-08-01", "2026-10-01")]   // un mes pasado: hasta el actual
+    [InlineData("2027-02-01", "2027-02-01")]   // un mes futuro: hasta ese mes
+    [InlineData("2031-01-01", "2028-10-01")]   // más de 24 meses: tope
+    public void Genera_hasta_el_mes_que_se_mira(string visto, string esperado)
+    {
+        Assert.Equal(DateOnly.Parse(esperado), RecurrenteService.HastaQueMes(Oct, DateOnly.Parse(visto)));
+        Assert.Equal(Oct, RecurrenteService.HastaQueMes(Oct, null));
+    }
+
+    [Fact]
+    public async Task Al_mirar_febrero_ya_estan_los_fijos_de_febrero()
+    {
+        await using var db = Contexto(Ana);
+        var s = new RecurrenteService(db);
+        var r = await s.CrearAsync(Fijo("Facultad", 9000m, Oct), Oct);
+
+        var feb = new DateOnly(2027, 2, 1);
+        Assert.Equal(4, await s.GenerarPendientesAsync(feb));      // noviembre a febrero
+        Assert.Equal(0, await s.GenerarPendientesAsync(feb));      // sin duplicar
+        Assert.Equal(0, await s.GenerarPendientesAsync(Oct));      // volver a un mes anterior no borra nada
+        Assert.Equal(5, (await GastosDeAsync(Ana, r.Id)).Count);
+        Assert.Equal(9000m, (await new GastoService(db).ResumenAsync(feb)).Total(Moneda.UYU));
+        Assert.Empty(await s.PrevistosAsync(feb));
+    }
+
+    [Fact]
+    public async Task Editar_rehace_los_meses_futuros_ya_cargados_salvo_los_ajustados_a_mano()
+    {
+        int id;
+        await using (var db = Contexto(Ana))
+        {
+            var s = new RecurrenteService(db);
+            id = (await s.CrearAsync(Fijo("Facultad", 9000m, Oct), Oct)).Id;
+            await s.GenerarPendientesAsync(new DateOnly(2027, 1, 1));   // octubre a enero
+        }
+        // Diciembre se ajustó a mano.
+        var dic = (await GastosDeAsync(Ana, id)).Single(g => g.PrimerPeriodo == new DateOnly(2026, 12, 1));
+        await using (var db = Contexto(Ana))
+            await new GastoService(db).ActualizarAsync(dic.Id, new GastoInput("Facultad", null, dic.Fecha, null, null, Moneda.UYU, 4500m, 1, 1, "media beca"));
+
+        await using (var db = Contexto(Ana))
+        {
+            var s = new RecurrenteService(db);
+            Assert.True(await s.ActualizarAsync(id, Fijo("Facultad", 9500m, Oct), Oct));
+            await s.GenerarPendientesAsync(new DateOnly(2027, 1, 1));
+        }
+
+        var montos = (await GastosDeAsync(Ana, id)).ToDictionary(g => g.PrimerPeriodo.Month, g => g.MontoCuota);
+        Assert.Equal(9000m, montos[10]);   // el mes actual no cambia
+        Assert.Equal(9500m, montos[11]);   // los futuros toman el valor nuevo
+        Assert.Equal(4500m, montos[12]);   // el ajustado a mano se respeta
+        Assert.Equal(9500m, montos[1]);
+        Assert.Equal(4, montos.Count);
+    }
+
+    [Fact]
+    public async Task Pausar_y_eliminar_quitan_los_meses_futuros()
+    {
+        await using var db = Contexto(Ana);
+        var s = new RecurrenteService(db);
+        var pausa = await s.CrearAsync(Fijo("Gimnasio", 1500m, Oct), Oct);
+        var borrar = await s.CrearAsync(Fijo("Netflix", 400m, Oct), Oct);
+        await s.GenerarPendientesAsync(new DateOnly(2027, 2, 1));
+
+        await s.CambiarEstadoAsync(pausa.Id, Oct);
+        Assert.Equal(new[] { Oct }, (await GastosDeAsync(Ana, pausa.Id)).Select(g => g.PrimerPeriodo));
+
+        Assert.Equal(1, await s.EliminarAsync(borrar.Id, Oct));    // queda octubre, como gasto común
+        Assert.Equal(1, await db.Gastos.CountAsync(g => g.Descripcion == "Netflix"));
     }
 
     [Fact]

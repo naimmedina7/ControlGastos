@@ -83,6 +83,11 @@
 - [x] Respaldo versión 2 (con ingresos), compatible con los de la versión 1.
 - 203 tests.
 
+## ✅ Gastos fijos en meses futuros (noviembre 2026)
+- [x] **Error corregido**: los gastos fijos de débito no se cargaban en noviembre porque un fijo de crédito chocaba con el gasto que ya había caído en ese estado de cuenta, y el choque frenaba a todos. Ahora ese gasto se salta y cada fijo se guarda por separado.
+- [x] Los fijos se cargan hasta el mes que mires (hasta 2 años adelante), así se ven en los totales de los meses futuros.
+- [x] Editar, pausar o borrar un fijo rehace o quita los meses futuros ya cargados; los ajustes a mano se respetan.
+
 ## Ideas para después
 - **Ingresos fijos**: un sueldo que se cargue solo cada mes, como los gastos fijos.
 - Ingresos y "cuánto te queda" en Reportes (evolución mes a mes).

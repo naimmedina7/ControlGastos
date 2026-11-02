@@ -61,12 +61,14 @@ Plantilla de un gasto que se repite todos los meses: alquiler, facultad, présta
 | DiaDelMes | 1–31. En meses más cortos se usa el último día (31 → 28/2). |
 | Desde, Hasta? | Primer y último mes (primer día del mes). Sin `Hasta`, no tiene fin. |
 | Activo | En pausa no genera. Al reanudar se sigue desde el mes en curso: **no se cargan los meses en pausa**. |
-| GeneradoHasta | Último mes ya generado. Cada mes se genera **una sola vez**: si borras el gasto de un mes, no vuelve a aparecer. |
+| GeneradoHasta | Último mes ya generado (puede ser futuro, si se miró un mes futuro). Cada mes se genera **una sola vez**: si borras el gasto de un mes, no vuelve a aparecer. |
 
 Reglas:
-- Genera un `Gasto` común (contado, `GastoRecurrenteId` = el fijo) por cada mes entre `Desde` y el mes en curso. Los meses futuros se muestran como **previstos** y se suman a la proyección, pero no se guardan.
-- Editar el fijo cambia solo los meses todavía no generados. El gasto de un mes ya cargado se edita como cualquier gasto (por ejemplo, si un mes vino distinto).
-- Al borrar el fijo, los gastos ya generados se conservan como gastos comunes.
+- Genera un `Gasto` común (contado, `GastoRecurrenteId` = el fijo) por cada mes entre `Desde` y el mes en curso, o hasta el mes futuro que se esté mirando (como mucho 24 meses adelante). Más allá, los meses se muestran como **previstos** y se suman a la proyección, pero no se guardan.
+- Un fijo da **un solo gasto por estado de cuenta**: si dos meses caen en el mismo (tarjeta de crédito con el cierre cambiado, o día 31), el segundo se salta.
+- Editar el fijo cambia desde el mes siguiente: los meses pasados y el actual no se tocan, y los meses futuros ya generados se rehacen con los valores nuevos, **salvo** los que ajustaste a mano (los que ya no coinciden con lo que había generado el fijo). El gasto de un mes ya cargado se edita como cualquier gasto.
+- Pausar el fijo quita los meses futuros ya generados (los ajustados a mano se conservan).
+- Al borrar el fijo, los gastos generados hasta el mes en curso se conservan como gastos comunes; los de meses futuros se borran.
 - Una tarjeta usada por un fijo no se puede borrar (FK `Restrict`); se desactiva.
 
 ### TipoCambio (ajuste manual) y CotizacionBcu
