@@ -71,7 +71,7 @@ public class RecurrentesController(RecurrenteService recurrentes, AppDbContext d
             try
             {
                 if (!await recurrentes.ActualizarAsync(id, input, reloj.MesActual)) return NotFound();
-                TempData["Ok"] = "Gasto fijo actualizado. Los cambios aplican a los próximos meses; los ya cargados no se modifican.";
+                TempData["Ok"] = "Gasto fijo actualizado. Los cambios aplican desde el mes que viene; los meses pasados y el actual no se modifican.";
                 return RedirectToAction(nameof(Index));
             }
             catch (ValidacionException ex) { ModelState.AddModelError("", ex.Message); }
@@ -92,10 +92,10 @@ public class RecurrentesController(RecurrenteService recurrentes, AppDbContext d
     [HttpPost("{id:int}/eliminar")]
     public async Task<IActionResult> Eliminar(int id)
     {
-        var n = await recurrentes.EliminarAsync(id);
+        var n = await recurrentes.EliminarAsync(id, reloj.MesActual);
         if (n == null) return NotFound();
         TempData["Ok"] = n > 0
-            ? $"Gasto fijo eliminado. Los {n} gasto(s) ya cargados se conservan."
+            ? $"Gasto fijo eliminado. Los {n} gasto(s) hasta este mes se conservan; los de meses futuros se quitaron."
             : "Gasto fijo eliminado.";
         return RedirectToAction(nameof(Index));
     }
